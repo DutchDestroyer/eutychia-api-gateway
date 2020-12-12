@@ -1,0 +1,716 @@
+openapi: 3.0.0
+info:
+  description: This api is a test version to connect the backend and frontend
+  title: Test api for project
+  version: 1.0.0
+servers:
+- url: https://app.insertname.com/api
+paths:
+  /accounts/{accountID}:
+    delete:
+      description: Delete the account with this ID
+      operationId: DeleteAccountByID
+      parameters:
+      - description: The ID of the account to return (UUID)
+        explode: false
+        in: path
+        name: accountID
+        required: true
+        schema:
+          description: schema to delete the account with a specific id
+          example: 0a8ba9ad-a93d-4991-8c23-c178b09fe6a1
+          pattern: ^[0-9a-f]{8}-[0-9a-f]{4}-[1-5][0-9a-f]{3}-[89ab][0-9a-f]{3}-[0-9a-f]{12}$
+          title: delete_account_id
+          type: string
+        style: simple
+      responses:
+        "200":
+          description: OK
+        "401":
+          description: Authentication failed
+        "404":
+          description: Account not found
+    get:
+      description: Returns an account by ID
+      operationId: GetAccountByID
+      parameters:
+      - description: The ID of the account to return (UUID)
+        example: 0a8ba9ad-a93d-4991-8c23-c178b09fe6a1
+        explode: false
+        in: path
+        name: accountID
+        required: true
+        schema:
+          description: schema to get the account
+          pattern: ^[0-9a-f]{8}-[0-9a-f]{4}-[1-5][0-9a-f]{3}-[89ab][0-9a-f]{3}-[0-9a-f]{12}$
+          title: schema_get_account_id
+          type: string
+        style: simple
+      responses:
+        "200":
+          content:
+            application/json:
+              example:
+                ID: 0a8ba9ad-a93d-4991-8c23-c178b09fe6a1
+                Name: Mark Wijnbergen
+                Email: markwijnbergen@hey.com
+              schema:
+                $ref: '#/components/schemas/get_account_id_response'
+          description: OK
+        "400":
+          description: The specified account ID is invalID
+        "401":
+          description: Authentication failed
+        "404":
+          description: Account not found
+  /accounts/{accountID}/projects:
+    get:
+      description: returns all projects where this account is involved in
+      operationId: GetProjectsOfAccount
+      parameters:
+      - description: The ID of the account
+        explode: false
+        in: path
+        name: accountID
+        required: true
+        schema:
+          description: the schema to fetch the projects of a specific account
+          example: 0a8ba9ad-a93d-4991-8c23-c178b09fe6a1
+          pattern: ^[0-9a-f]{8}-[0-9a-f]{4}-[1-5][0-9a-f]{3}-[89ab][0-9a-f]{3}-[0-9a-f]{12}$
+          title: schema_projects_account_id
+          type: string
+        style: simple
+      responses:
+        "200":
+          content:
+            application/json:
+              example:
+                projects:
+                - projectID: 0a8ba9ad-a93d-4991-8c23-c178b09fe6a1
+                  projectName: project 1
+                - projectID: 0a8ba9ad-a93d-4991-8c23-c178b09fe6a2
+                  projectName: project 2
+              schema:
+                $ref: '#/components/schemas/projects_account_id'
+          description: OK
+  /authentication/login:
+    post:
+      description: logging in the account
+      operationId: LogInWithAccount
+      requestBody:
+        $ref: '#/components/requestBodies/login_account'
+        content:
+          application/json:
+            examples:
+              password:
+                value:
+                  grantType: password
+                  emailAddress: markwijnbergen@hey.com
+                  password: password
+              token:
+                value:
+                  grantType: password
+                  emailAddress: markwijnbergen@hey.com
+                  refreshToken: 0a8ba9ad-a93d-4991-8c23-c178b09fe6a2
+            schema:
+              properties:
+                grantType:
+                  description: type of grant type to log in with
+                  enum:
+                  - password
+                  - autenthicationToken
+                  type: string
+                emailAddress:
+                  description: account email address to log in with
+                  type: string
+                password:
+                  description: password of the account to log in with
+                  type: string
+                refreshToken:
+                  description: refreshtoken of the account to log in with
+                  pattern: ^[0-9a-f]{8}-[0-9a-f]{4}-[1-5][0-9a-f]{3}-[89ab][0-9a-f]{3}-[0-9a-f]{12}$
+                  type: string
+              required:
+              - emailAddress
+              - grantType
+              title: login_account
+              type: object
+        required: true
+      responses:
+        "200":
+          content:
+            application/json:
+              example:
+                accountID: 0a8ba9ad-a93d-4991-8c23-c178b09fe6a2
+                accessToken: 0a8ba9ad-a93d-4991-8c23-c178b09fe6a2
+                refreshToken: 0a8ba9ad-a93d-4991-8c23-c178b09fe6a2
+              schema:
+                $ref: '#/components/schemas/account_details'
+          description: OK
+  /authentication/revoke:
+    post:
+      description: logging out the account
+      operationId: LogOutWithAccount
+      requestBody:
+        $ref: '#/components/requestBodies/logout_account'
+        content:
+          application/json:
+            example:
+              accessToken: 0a8ba9ad-a93d-4991-8c23-c178b09fe6a2
+            schema:
+              description: schema to revoke access with the specific account
+              properties:
+                accessToken:
+                  description: access token that needs to be revoked to log out
+                  pattern: ^[0-9a-f]{8}-[0-9a-f]{4}-[1-5][0-9a-f]{3}-[89ab][0-9a-f]{3}-[0-9a-f]{12}$
+                  type: string
+              required:
+              - accessToken
+              title: logout_account
+              type: object
+        required: true
+      responses:
+        "200":
+          description: OK
+  /projects/{projectID}/{accountID}/tests:
+    get:
+      description: Get all tests that need to be performed by account
+      operationId: GetTestsToPerformByAccount
+      parameters:
+      - description: The ID of the project to return (UUID)
+        explode: false
+        in: path
+        name: projectID
+        required: true
+        schema:
+          description: the id of the project to get the tests from
+          example: 0a8ba9ad-a93d-4991-8c23-c178b09fe6a2
+          pattern: ^[0-9a-f]{8}-[0-9a-f]{4}-[1-5][0-9a-f]{3}-[89ab][0-9a-f]{3}-[0-9a-f]{12}$
+          title: project_id
+          type: string
+        style: simple
+      - description: The ID of the account to return (UUID)
+        explode: false
+        in: path
+        name: accountID
+        required: true
+        schema:
+          description: the id of the account to get the tests from
+          example: 0a8ba9ad-a93d-4991-8c23-c178b09fe6a2
+          pattern: ^[0-9a-f]{8}-[0-9a-f]{4}-[1-5][0-9a-f]{3}-[89ab][0-9a-f]{3}-[0-9a-f]{12}$
+          title: account_id
+          type: string
+        style: simple
+      responses:
+        "200":
+          content:
+            application/json:
+              example:
+                tests:
+                - testID: 0a8ba9ad-a93d-4991-8c23-c178b09fe6a2
+                  testName: test 1
+                - testID: 0a8ba9ad-a93d-4991-8c23-c178b09fe6a3
+                  testName: test 2
+              schema:
+                description: tests that the account needs to perform for this specific
+                  project
+                properties:
+                  testsToPerform:
+                    description: array of tests
+                    items:
+                      description: test to perform
+                      properties:
+                        testID:
+                          description: id of the test
+                          pattern: ^[0-9a-f]{8}-[0-9a-f]{4}-[1-5][0-9a-f]{3}-[89ab][0-9a-f]{3}-[0-9a-f]{12}$
+                          type: string
+                        testName:
+                          description: name of the test
+                          type: string
+                      title: test
+                      type: object
+                    title: tests
+                    type: array
+                title: tests
+          description: OK
+        "401":
+          description: Authentication failed
+        "404":
+          description: Account not found
+  /projects/{projectID}/genericTests/{testID}:
+    get:
+      description: Get a generic test with specific ID
+      operationId: GetGenericTestOfProject
+      parameters:
+      - description: The ID of the project to return
+        explode: false
+        in: path
+        name: projectID
+        required: true
+        schema:
+          description: schema of the project id
+          example: 0a8ba9ad-a93d-4991-8c23-c178b09fe6a2
+          pattern: ^[0-9a-f]{8}-[0-9a-f]{4}-[1-5][0-9a-f]{3}-[89ab][0-9a-f]{3}-[0-9a-f]{12}$
+          title: project_id
+          type: string
+        style: simple
+      - description: The ID of the test to return
+        explode: false
+        in: path
+        name: testID
+        required: true
+        schema:
+          description: schema of the test id
+          example: 0a8ba9ad-a93d-4991-8c23-c178b09fe6a2
+          pattern: ^[0-9a-f]{8}-[0-9a-f]{4}-[1-5][0-9a-f]{3}-[89ab][0-9a-f]{3}-[0-9a-f]{12}$
+          title: test_id
+          type: string
+        style: simple
+      responses:
+        "200":
+          content:
+            application/json:
+              example:
+                title: Title of Questionnaire
+                description: Hi thanks for joining
+                displayAnswers: true
+                finalRemark: Thanks for your participation
+                questions:
+                - question: whats your age
+                  questionType: openQuestion
+                  answers: {}
+                - question: whats your sex
+                  questionType: multipleChoice
+                  answers:
+                  - male
+                  - female
+                - question: rate your happines
+                  questionType: slider
+                  answers:
+                  - very unhappy
+                  - unhappy
+                  - moderate
+                  - happy
+                  - very happy
+              schema:
+                $ref: '#/components/schemas/generic_test'
+          description: OK
+    post:
+      description: Submit the answer to the specific
+      operationId: SubmitAnswerToTest
+      parameters:
+      - description: The ID of the project to return
+        explode: false
+        in: path
+        name: projectID
+        required: true
+        schema:
+          example: 0a8ba9ad-a93d-4991-8c23-c178b09fe6a2
+          pattern: ^[0-9a-f]{8}-[0-9a-f]{4}-[1-5][0-9a-f]{3}-[89ab][0-9a-f]{3}-[0-9a-f]{12}$
+          type: string
+        style: simple
+      - description: The ID of the test to return (UUID)
+        explode: false
+        in: path
+        name: testID
+        required: true
+        schema:
+          example: 0a8ba9ad-a93d-4991-8c23-c178b09fe6a2
+          pattern: ^[0-9a-f]{8}-[0-9a-f]{4}-[1-5][0-9a-f]{3}-[89ab][0-9a-f]{3}-[0-9a-f]{12}$
+          type: string
+        style: simple
+      requestBody:
+        $ref: '#/components/requestBodies/genericTestAnswers'
+        content:
+          application/json:
+            example:
+              accountID: 0a8ba9ad-a93d-4991-8c23-c178b09fe6a2
+              answers:
+              - question: 1
+                answer: yo mama is so fat
+                timeToAnswer: 5000
+              - question: 2
+                answer: They are taking the hobbits to Isengard
+                timeToAnswer: 3999
+            schema:
+              description: The answers to a generic test
+              properties:
+                accountID:
+                  description: the id of the account that performed this test
+                  pattern: ^[0-9a-f]{8}-[0-9a-f]{4}-[1-5][0-9a-f]{3}-[89ab][0-9a-f]{3}-[0-9a-f]{12}$
+                  title: accountID
+                  type: string
+                answers:
+                  description: the array of answers for this questionnaire
+                  items:
+                    $ref: '#/components/schemas/answer_to_question'
+                  title: array of answers
+                  type: array
+              title: genericTestAnswers
+              type: object
+        required: true
+      responses:
+        "200":
+          description: OK
+  /signup:
+    post:
+      description: Sends an email address that needs to be signed up
+      operationId: SendEmailForSignUp
+      requestBody:
+        $ref: '#/components/requestBodies/sign_up'
+        content:
+          application/json:
+            example:
+              senderAccountID: 0a8ba9ad-a93d-4991-8c23-c178b09fe6a2
+              emailAddress: markwijnbergen@heycom
+            schema:
+              description: schema for signing up
+              properties:
+                senderAccountID:
+                  description: account id of the account that invites the new user
+                  pattern: ^[0-9a-f]{8}-[0-9a-f]{4}-[1-5][0-9a-f]{3}-[89ab][0-9a-f]{3}-[0-9a-f]{12}$
+                  title: sender account id
+                  type: string
+                emailAddress:
+                  description: the email address of the newly invited person
+                  title: emailAddress
+                  type: string
+              required:
+              - emailAddress
+              - senderAccountID
+              title: sign up
+              type: object
+        required: true
+      responses:
+        "200":
+          description: OK
+  /signup/create:
+    post:
+      description: Creates a new account
+      operationId: CreateNewAccount
+      requestBody:
+        $ref: '#/components/requestBodies/account_creation'
+        content:
+          application/json:
+            example:
+              firstName: Mark
+              lastName: Wijnbergen
+              emailAddress: markwijnbergen@hey.com
+              senderAccountID: 0a8ba9ad-a93d-4991-8c23-c178b09fe6a2
+            schema:
+              description: the schema to create the new account
+              properties:
+                firstName:
+                  description: first name of the new user
+                  title: first name
+                  type: string
+                lastName:
+                  description: last name of the new user
+                  title: last name
+                  type: string
+                senderAccountID:
+                  description: the id of the account that invited the new user
+                  pattern: ^[0-9a-f]{8}-[0-9a-f]{4}-[1-5][0-9a-f]{3}-[89ab][0-9a-f]{3}-[0-9a-f]{12}$
+                  title: sender account id
+                  type: string
+                emailAddress:
+                  type: string
+              required:
+              - emailAddress
+              - firstName
+              - lastName
+              - senderAccountID
+              title: account_creation
+              type: object
+        required: true
+      responses:
+        "200":
+          description: OK
+components:
+  requestBodies:
+    logout_account:
+      content:
+        application/json:
+          schema:
+            $ref: '#/components/schemas/logout_account'
+      required: true
+    sign_up:
+      content:
+        application/json:
+          schema:
+            $ref: '#/components/schemas/sign_up'
+      required: true
+    genericTestAnswers:
+      content:
+        application/json:
+          schema:
+            $ref: '#/components/schemas/genericTestAnswers'
+      required: true
+    account_creation:
+      content:
+        application/json:
+          schema:
+            $ref: '#/components/schemas/account_creation'
+      required: true
+    login_account:
+      content:
+        application/json:
+          schema:
+            $ref: '#/components/schemas/login_account'
+      required: true
+  schemas:
+    logout_account:
+      description: schema to revoke access with the specific account
+      properties:
+        accessToken:
+          description: access token that needs to be revoked to log out
+          pattern: ^[0-9a-f]{8}-[0-9a-f]{4}-[1-5][0-9a-f]{3}-[89ab][0-9a-f]{3}-[0-9a-f]{12}$
+          type: string
+      required:
+      - accessToken
+      title: logout_account
+      type: object
+    sign_up:
+      description: schema for signing up
+      properties:
+        senderAccountID:
+          description: account id of the account that invites the new user
+          pattern: ^[0-9a-f]{8}-[0-9a-f]{4}-[1-5][0-9a-f]{3}-[89ab][0-9a-f]{3}-[0-9a-f]{12}$
+          title: sender account id
+          type: string
+        emailAddress:
+          description: the email address of the newly invited person
+          title: emailAddress
+          type: string
+      required:
+      - emailAddress
+      - senderAccountID
+      title: sign up
+      type: object
+    answer_to_question:
+      description: the answer to a question
+      properties:
+        question:
+          description: the question number
+          title: question number
+          type: integer
+        answer:
+          description: an answer to a question
+          title: answer to question
+          type: string
+        timeToAnswer:
+          description: the time in milliseconds to answer the question
+          title: time to answer
+          type: number
+      title: answer to question
+      type: object
+    genericTestAnswers:
+      description: The answers to a generic test
+      properties:
+        accountID:
+          description: the id of the account that performed this test
+          pattern: ^[0-9a-f]{8}-[0-9a-f]{4}-[1-5][0-9a-f]{3}-[89ab][0-9a-f]{3}-[0-9a-f]{12}$
+          title: accountID
+          type: string
+        answers:
+          description: the array of answers for this questionnaire
+          items:
+            $ref: '#/components/schemas/answer_to_question'
+          title: array of answers
+          type: array
+      title: genericTestAnswers
+      type: object
+    account_creation:
+      description: the schema to create the new account
+      properties:
+        firstName:
+          description: first name of the new user
+          title: first name
+          type: string
+        lastName:
+          description: last name of the new user
+          title: last name
+          type: string
+        senderAccountID:
+          description: the id of the account that invited the new user
+          pattern: ^[0-9a-f]{8}-[0-9a-f]{4}-[1-5][0-9a-f]{3}-[89ab][0-9a-f]{3}-[0-9a-f]{12}$
+          title: sender account id
+          type: string
+        emailAddress:
+          type: string
+      required:
+      - emailAddress
+      - firstName
+      - lastName
+      - senderAccountID
+      title: account_creation
+      type: object
+    project:
+      description: a project object
+      example:
+        projectName: projectName
+        projectID: projectID
+      properties:
+        projectID:
+          description: the id of a project
+          pattern: ^[0-9a-f]{8}-[0-9a-f]{4}-[1-5][0-9a-f]{3}-[89ab][0-9a-f]{3}-[0-9a-f]{12}$
+          type: string
+        projectName:
+          description: the name of a project
+          type: string
+      title: project
+      type: object
+    account_details:
+      description: the account details provided when the user logs in
+      example:
+        accountID: accountID
+        accessToken: accessToken
+        refreshToken: refreshToken
+      properties:
+        accountID:
+          description: The account ID.
+          pattern: ^[0-9a-f]{8}-[0-9a-f]{4}-[1-5][0-9a-f]{3}-[89ab][0-9a-f]{3}-[0-9a-f]{12}$
+          type: string
+        accessToken:
+          description: The access token.
+          pattern: ^[0-9a-f]{8}-[0-9a-f]{4}-[1-5][0-9a-f]{3}-[89ab][0-9a-f]{3}-[0-9a-f]{12}$
+          type: string
+        refreshToken:
+          description: The refresh token.
+          pattern: ^[0-9a-f]{8}-[0-9a-f]{4}-[1-5][0-9a-f]{3}-[89ab][0-9a-f]{3}-[0-9a-f]{12}$
+          type: string
+      required:
+      - accessToken
+      - accountID
+      - refreshToken
+      title: account details
+      type: object
+    login_account:
+      properties:
+        grantType:
+          description: type of grant type to log in with
+          enum:
+          - password
+          - autenthicationToken
+          type: string
+        emailAddress:
+          description: account email address to log in with
+          type: string
+        password:
+          description: password of the account to log in with
+          type: string
+        refreshToken:
+          description: refreshtoken of the account to log in with
+          pattern: ^[0-9a-f]{8}-[0-9a-f]{4}-[1-5][0-9a-f]{3}-[89ab][0-9a-f]{3}-[0-9a-f]{12}$
+          type: string
+      required:
+      - emailAddress
+      - grantType
+      title: login_account
+      type: object
+    get_account_id_response:
+      description: response to provide account details
+      example:
+        Email: Email
+        ID: ID
+        Name: Name
+      properties:
+        ID:
+          description: The id of the account
+          pattern: ^[0-9a-f]{8}-[0-9a-f]{4}-[1-5][0-9a-f]{3}-[89ab][0-9a-f]{3}-[0-9a-f]{12}$
+          type: string
+        Name:
+          description: the name of the account
+          type: string
+        Email:
+          description: the email address of the account
+          type: string
+      required:
+      - Email
+      - ID
+      - Name
+      title: get_account_id_response
+      type: object
+    generic_test:
+      description: schema of a generic test
+      example:
+        questions:
+        - question: question
+          answers:
+          - answers
+          - answers
+          questionType: openQuestion
+        - question: question
+          answers:
+          - answers
+          - answers
+          questionType: openQuestion
+        description: description
+        displayAnswers: true
+        title: title
+        finalRemark: finalRemark
+      properties:
+        title:
+          description: Title of questionnaire
+          type: string
+        description:
+          description: Description of questionnaire
+          type: string
+        displayAnswers:
+          description: To determine whether the answers should be displayed at the
+            end of the questionnaire
+          type: boolean
+        finalRemark:
+          description: Final remakrs at the end of the questionnaire
+          type: string
+        questions:
+          items:
+            $ref: '#/components/schemas/generic_test_questions'
+          type: array
+      required:
+      - description
+      - displayAnswers
+      - finalRemark
+      - questions
+      - title
+      title: generic_test
+      type: object
+    projects_account_id:
+      description: response with the projects of a specific account
+      example:
+        projects:
+        - projectName: projectName
+          projectID: projectID
+        - projectName: projectName
+          projectID: projectID
+      properties:
+        projects:
+          description: an array with all projects
+          items:
+            $ref: '#/components/schemas/project'
+          title: projects
+          type: array
+      title: projects_account_id
+      type: object
+    generic_test_questions:
+      example:
+        question: question
+        answers:
+        - answers
+        - answers
+        questionType: openQuestion
+      properties:
+        question:
+          title: question
+          type: string
+        questionType:
+          enum:
+          - openQuestion
+          - multipleChoice
+          - slider
+          type: string
+        answers:
+          items:
+            type: string
+          type: array
+      type: object
