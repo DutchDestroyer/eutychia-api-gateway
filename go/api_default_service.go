@@ -11,12 +11,14 @@ package openapi
 
 import (
 	"context"
-	"net/http"
 	"errors"
+	"net/http"
+
+	uuidvalidator "github.com/DutchDestroyer/eutychia-api-gateway/services"
 )
 
 // DefaultApiService is a service that implents the logic for the DefaultApiServicer
-// This service should implement the business logic for every endpoint for the DefaultApi API. 
+// This service should implement the business logic for every endpoint for the DefaultApi API.
 // Include any external packages or services that will be required by this service.
 type DefaultApiService struct {
 }
@@ -26,7 +28,7 @@ func NewDefaultApiService() DefaultApiServicer {
 	return &DefaultApiService{}
 }
 
-// CreateNewAccount - 
+// CreateNewAccount -
 func (s *DefaultApiService) CreateNewAccount(ctx context.Context, accountCreation AccountCreation) (ImplResponse, error) {
 	// TODO - update CreateNewAccount with the required logic for this service method.
 	// Add api_default_service.go to the .openapi-generator-ignore to avoid overwriting this service implementation when updating open api generation.
@@ -37,7 +39,7 @@ func (s *DefaultApiService) CreateNewAccount(ctx context.Context, accountCreatio
 	return Response(http.StatusNotImplemented, nil), errors.New("CreateNewAccount method not implemented")
 }
 
-// DeleteAccountByID - 
+// DeleteAccountByID -
 func (s *DefaultApiService) DeleteAccountByID(ctx context.Context, accountID string) (ImplResponse, error) {
 	// TODO - update DeleteAccountByID with the required logic for this service method.
 	// Add api_default_service.go to the .openapi-generator-ignore to avoid overwriting this service implementation when updating open api generation.
@@ -54,13 +56,13 @@ func (s *DefaultApiService) DeleteAccountByID(ctx context.Context, accountID str
 	return Response(http.StatusNotImplemented, nil), errors.New("DeleteAccountByID method not implemented")
 }
 
-// GetAccountByID - 
+// GetAccountByID -
 func (s *DefaultApiService) GetAccountByID(ctx context.Context, accountID string) (ImplResponse, error) {
 	// TODO - update GetAccountByID with the required logic for this service method.
-	// Add api_default_service.go to the .openapi-generator-ignore to avoid overwriting this service implementation when updating open api generation.
 
-	//TODO: Uncomment the next line to return response Response(200, GetAccountIdResponse{}) or use other options such as http.Ok ...
-	//return Response(200, GetAccountIdResponse{}), nil
+	if !uuidvalidator.IsCorrectUUID(accountID) {
+		return Response(http.StatusBadRequest, nil), errors.New("Incorrect data provided by client")
+	}
 
 	//TODO: Uncomment the next line to return response Response(400, {}) or use other options such as http.Ok ...
 	//return Response(400, nil),nil
@@ -71,49 +73,87 @@ func (s *DefaultApiService) GetAccountByID(ctx context.Context, accountID string
 	//TODO: Uncomment the next line to return response Response(404, {}) or use other options such as http.Ok ...
 	//return Response(404, nil),nil
 
-	return Response(http.StatusNotImplemented, nil), errors.New("GetAccountByID method not implemented")
+	return Response(http.StatusOK, GetAccountIdResponse{ID: "7b43fcf0-be12-4f91-8baa-fcdcac8118d5", Name: "Mark Wijnbergen", Email: "markwijnbergen@hey.com"}), nil
 }
 
-// GetGenericTestOfProject - 
+// GetGenericTestOfProject -
 func (s *DefaultApiService) GetGenericTestOfProject(ctx context.Context, projectID string, testID string) (ImplResponse, error) {
 	// TODO - update GetGenericTestOfProject with the required logic for this service method.
-	// Add api_default_service.go to the .openapi-generator-ignore to avoid overwriting this service implementation when updating open api generation.
+
+	if !uuidvalidator.IsCorrectUUID(projectID) || !uuidvalidator.IsCorrectUUID(testID) {
+		return Response(http.StatusBadRequest, nil), errors.New("Incorrect data provided by client")
+	}
 
 	//TODO: Uncomment the next line to return response Response(200, GenericTest{}) or use other options such as http.Ok ...
 	//return Response(200, GenericTest{}), nil
 
-	return Response(http.StatusNotImplemented, nil), errors.New("GetGenericTestOfProject method not implemented")
+	var genericTestQuestions = []GenericTestQuestions{
+		{
+			Question:     "What is your favorite food?",
+			QuestionType: "multipleChoice",
+			Answers:      []string{"Pizza", "Pasta", "Burger", "Steak", "Something else"},
+		},
+		{
+			Question:     "How are  you feeling today?",
+			QuestionType: "slider",
+			Answers:      []string{"very bad", "bad", "normal", "good", "awesome"},
+		},
+		{
+			Question:     "What is the best experience so far today?",
+			QuestionType: "openQuestion",
+			Answers:      nil,
+		},
+	}
+
+	return Response(http.StatusNotImplemented,
+		GenericTest{Title: "Title of generic test",
+			Description:    "Description of the test bla bla bla",
+			DisplayAnswers: true,
+			FinalRemark:    "This is the final remark, thanks for performing the test!",
+			Questions:      genericTestQuestions,
+		}), nil
 }
 
-// GetProjectsOfAccount - 
+// GetProjectsOfAccount -
 func (s *DefaultApiService) GetProjectsOfAccount(ctx context.Context, accountID string) (ImplResponse, error) {
 	// TODO - update GetProjectsOfAccount with the required logic for this service method.
 	// Add api_default_service.go to the .openapi-generator-ignore to avoid overwriting this service implementation when updating open api generation.
 
-	//TODO: Uncomment the next line to return response Response(200, ProjectsAccountId{}) or use other options such as http.Ok ...
-	//return Response(200, ProjectsAccountId{}), nil
+	if !uuidvalidator.IsCorrectUUID(accountID) {
+		return Response(http.StatusBadRequest, nil), errors.New("Incorrect data provided by client")
+	}
 
-	return Response(http.StatusNotImplemented, nil), errors.New("GetProjectsOfAccount method not implemented")
+	var projects = []Project{
+		{
+			ProjectID:   "7b43fcf0-be12-4f91-8baa-fcdcac8118d5",
+			ProjectName: "Project 1",
+		},
+		{
+			ProjectID:   "7b43fcf0-be12-4f91-8baa-fcdcac8118d5",
+			ProjectName: "Project 2",
+		},
+		{
+			ProjectID:   "",
+			ProjectName: "This should throw an error",
+		},
+	}
+
+	return Response(200, ProjectsAccountId{Projects: projects}), nil
 }
 
-// GetTestsToPerformByAccount - 
+// GetTestsToPerformByAccount -
 func (s *DefaultApiService) GetTestsToPerformByAccount(ctx context.Context, projectID string, accountID string) (ImplResponse, error) {
 	// TODO - update GetTestsToPerformByAccount with the required logic for this service method.
 	// Add api_default_service.go to the .openapi-generator-ignore to avoid overwriting this service implementation when updating open api generation.
 
-	//TODO: Uncomment the next line to return response Response(200, map[string]interface{}{}) or use other options such as http.Ok ...
-	//return Response(200, map[string]interface{}{}), nil
+	if !uuidvalidator.IsCorrectUUID(projectID) || !uuidvalidator.IsCorrectUUID(accountID) {
+		return Response(http.StatusBadRequest, nil), errors.New("Incorrect data provided by client")
+	}
 
-	//TODO: Uncomment the next line to return response Response(401, {}) or use other options such as http.Ok ...
-	//return Response(401, nil),nil
-
-	//TODO: Uncomment the next line to return response Response(404, {}) or use other options such as http.Ok ...
-	//return Response(404, nil),nil
-
-	return Response(http.StatusNotImplemented, nil), errors.New("GetTestsToPerformByAccount method not implemented")
+	return Response(http.StatusOK, map[string]interface{}{}), nil
 }
 
-// LogInWithAccount - 
+// LogInWithAccount -
 func (s *DefaultApiService) LogInWithAccount(ctx context.Context, loginAccount LoginAccount) (ImplResponse, error) {
 	// TODO - update LogInWithAccount with the required logic for this service method.
 	// Add api_default_service.go to the .openapi-generator-ignore to avoid overwriting this service implementation when updating open api generation.
@@ -124,7 +164,7 @@ func (s *DefaultApiService) LogInWithAccount(ctx context.Context, loginAccount L
 	return Response(http.StatusNotImplemented, nil), errors.New("LogInWithAccount method not implemented")
 }
 
-// LogOutWithAccount - 
+// LogOutWithAccount -
 func (s *DefaultApiService) LogOutWithAccount(ctx context.Context, logoutAccount LogoutAccount) (ImplResponse, error) {
 	// TODO - update LogOutWithAccount with the required logic for this service method.
 	// Add api_default_service.go to the .openapi-generator-ignore to avoid overwriting this service implementation when updating open api generation.
@@ -135,7 +175,7 @@ func (s *DefaultApiService) LogOutWithAccount(ctx context.Context, logoutAccount
 	return Response(http.StatusNotImplemented, nil), errors.New("LogOutWithAccount method not implemented")
 }
 
-// SendEmailForSignUp - 
+// SendEmailForSignUp -
 func (s *DefaultApiService) SendEmailForSignUp(ctx context.Context, signUp SignUp) (ImplResponse, error) {
 	// TODO - update SendEmailForSignUp with the required logic for this service method.
 	// Add api_default_service.go to the .openapi-generator-ignore to avoid overwriting this service implementation when updating open api generation.
@@ -146,7 +186,7 @@ func (s *DefaultApiService) SendEmailForSignUp(ctx context.Context, signUp SignU
 	return Response(http.StatusNotImplemented, nil), errors.New("SendEmailForSignUp method not implemented")
 }
 
-// SubmitAnswerToTest - 
+// SubmitAnswerToTest -
 func (s *DefaultApiService) SubmitAnswerToTest(ctx context.Context, projectID string, testID string, genericTestAnswers GenericTestAnswers) (ImplResponse, error) {
 	// TODO - update SubmitAnswerToTest with the required logic for this service method.
 	// Add api_default_service.go to the .openapi-generator-ignore to avoid overwriting this service implementation when updating open api generation.
@@ -156,4 +196,3 @@ func (s *DefaultApiService) SubmitAnswerToTest(ctx context.Context, projectID st
 
 	return Response(http.StatusNotImplemented, nil), errors.New("SubmitAnswerToTest method not implemented")
 }
-

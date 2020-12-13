@@ -25,3 +25,4 @@
 main.go
 /go/api_default_service.go
 README.md
+go.mod
