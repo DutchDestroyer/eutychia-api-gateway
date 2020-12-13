@@ -1,6 +1,5 @@
 Dockerfile
 api/openapi.yaml
-go.mod
 go/api.go
 go/api_default.go
 go/helpers.go
@@ -18,4 +17,6 @@ go/model_logout_account.go
 go/model_project.go
 go/model_projects_account_id.go
 go/model_sign_up.go
+go/model_test_.go
+go/model_tests_project.go
 go/routers.go

@@ -31,7 +31,6 @@ func NewDefaultApiService() DefaultApiServicer {
 // CreateNewAccount -
 func (s *DefaultApiService) CreateNewAccount(ctx context.Context, accountCreation AccountCreation) (ImplResponse, error) {
 	// TODO - update CreateNewAccount with the required logic for this service method.
-	// Add api_default_service.go to the .openapi-generator-ignore to avoid overwriting this service implementation when updating open api generation.
 
 	//TODO: Uncomment the next line to return response Response(200, {}) or use other options such as http.Ok ...
 	//return Response(200, nil),nil
@@ -42,7 +41,6 @@ func (s *DefaultApiService) CreateNewAccount(ctx context.Context, accountCreatio
 // DeleteAccountByID -
 func (s *DefaultApiService) DeleteAccountByID(ctx context.Context, accountID string) (ImplResponse, error) {
 	// TODO - update DeleteAccountByID with the required logic for this service method.
-	// Add api_default_service.go to the .openapi-generator-ignore to avoid overwriting this service implementation when updating open api generation.
 
 	//TODO: Uncomment the next line to return response Response(200, {}) or use other options such as http.Ok ...
 	//return Response(200, nil),nil
@@ -84,9 +82,6 @@ func (s *DefaultApiService) GetGenericTestOfProject(ctx context.Context, project
 		return Response(http.StatusBadRequest, nil), errors.New("Incorrect data provided by client")
 	}
 
-	//TODO: Uncomment the next line to return response Response(200, GenericTest{}) or use other options such as http.Ok ...
-	//return Response(200, GenericTest{}), nil
-
 	var genericTestQuestions = []GenericTestQuestions{
 		{
 			Question:     "What is your favorite food?",
@@ -117,7 +112,6 @@ func (s *DefaultApiService) GetGenericTestOfProject(ctx context.Context, project
 // GetProjectsOfAccount -
 func (s *DefaultApiService) GetProjectsOfAccount(ctx context.Context, accountID string) (ImplResponse, error) {
 	// TODO - update GetProjectsOfAccount with the required logic for this service method.
-	// Add api_default_service.go to the .openapi-generator-ignore to avoid overwriting this service implementation when updating open api generation.
 
 	if !uuidvalidator.IsCorrectUUID(accountID) {
 		return Response(http.StatusBadRequest, nil), errors.New("Incorrect data provided by client")
@@ -144,30 +138,42 @@ func (s *DefaultApiService) GetProjectsOfAccount(ctx context.Context, accountID 
 // GetTestsToPerformByAccount -
 func (s *DefaultApiService) GetTestsToPerformByAccount(ctx context.Context, projectID string, accountID string) (ImplResponse, error) {
 	// TODO - update GetTestsToPerformByAccount with the required logic for this service method.
-	// Add api_default_service.go to the .openapi-generator-ignore to avoid overwriting this service implementation when updating open api generation.
 
 	if !uuidvalidator.IsCorrectUUID(projectID) || !uuidvalidator.IsCorrectUUID(accountID) {
 		return Response(http.StatusBadRequest, nil), errors.New("Incorrect data provided by client")
 	}
 
-	return Response(http.StatusOK, map[string]interface{}{}), nil
+	var testProjects = []Test{
+		{
+			TestID:   "7b43fcf0-be12-4f91-8baa-fcdcac8118d5",
+			TestName: "Test 1",
+		},
+		{
+			TestID:   "7b43fcf0-be12-4f91-8baa-fcdcac8118d5",
+			TestName: "Test 2",
+		},
+		{
+			TestID:   "",
+			TestName: "Incorrect, should throw error",
+		},
+	}
+
+	return Response(http.StatusOK, TestsProject{TestsToPerform: testProjects}), nil
 }
 
 // LogInWithAccount -
 func (s *DefaultApiService) LogInWithAccount(ctx context.Context, loginAccount LoginAccount) (ImplResponse, error) {
 	// TODO - update LogInWithAccount with the required logic for this service method.
-	// Add api_default_service.go to the .openapi-generator-ignore to avoid overwriting this service implementation when updating open api generation.
 
-	//TODO: Uncomment the next line to return response Response(200, AccountDetails{}) or use other options such as http.Ok ...
-	//return Response(200, AccountDetails{}), nil
-
-	return Response(http.StatusNotImplemented, nil), errors.New("LogInWithAccount method not implemented")
+	return Response(200, AccountDetails{
+		AccountID:    "7b43fcf0-be12-4f91-8baa-fcdcac8118d5",
+		AccessToken:  "cdbac82e-3b19-4351-bb82-9feb36327a5a",
+		RefreshToken: "21ab4555-17a3-4db7-a814-cacfce5f6e1c"}), nil
 }
 
 // LogOutWithAccount -
 func (s *DefaultApiService) LogOutWithAccount(ctx context.Context, logoutAccount LogoutAccount) (ImplResponse, error) {
 	// TODO - update LogOutWithAccount with the required logic for this service method.
-	// Add api_default_service.go to the .openapi-generator-ignore to avoid overwriting this service implementation when updating open api generation.
 
 	//TODO: Uncomment the next line to return response Response(200, {}) or use other options such as http.Ok ...
 	//return Response(200, nil),nil
@@ -178,7 +184,6 @@ func (s *DefaultApiService) LogOutWithAccount(ctx context.Context, logoutAccount
 // SendEmailForSignUp -
 func (s *DefaultApiService) SendEmailForSignUp(ctx context.Context, signUp SignUp) (ImplResponse, error) {
 	// TODO - update SendEmailForSignUp with the required logic for this service method.
-	// Add api_default_service.go to the .openapi-generator-ignore to avoid overwriting this service implementation when updating open api generation.
 
 	//TODO: Uncomment the next line to return response Response(200, {}) or use other options such as http.Ok ...
 	//return Response(200, nil),nil
@@ -189,10 +194,6 @@ func (s *DefaultApiService) SendEmailForSignUp(ctx context.Context, signUp SignU
 // SubmitAnswerToTest -
 func (s *DefaultApiService) SubmitAnswerToTest(ctx context.Context, projectID string, testID string, genericTestAnswers GenericTestAnswers) (ImplResponse, error) {
 	// TODO - update SubmitAnswerToTest with the required logic for this service method.
-	// Add api_default_service.go to the .openapi-generator-ignore to avoid overwriting this service implementation when updating open api generation.
 
-	//TODO: Uncomment the next line to return response Response(200, {}) or use other options such as http.Ok ...
-	//return Response(200, nil),nil
-
-	return Response(http.StatusNotImplemented, nil), errors.New("SubmitAnswerToTest method not implemented")
+	return Response(http.StatusOK, nil), nil
 }

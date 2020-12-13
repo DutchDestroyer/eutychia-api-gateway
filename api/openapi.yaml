@@ -206,32 +206,13 @@ paths:
           content:
             application/json:
               example:
-                tests:
+                testsToPerform:
                 - testID: 0a8ba9ad-a93d-4991-8c23-c178b09fe6a2
                   testName: test 1
                 - testID: 0a8ba9ad-a93d-4991-8c23-c178b09fe6a3
                   testName: test 2
               schema:
-                description: tests that the account needs to perform for this specific
-                  project
-                properties:
-                  testsToPerform:
-                    description: array of tests
-                    items:
-                      description: test to perform
-                      properties:
-                        testID:
-                          description: id of the test
-                          pattern: ^[0-9a-f]{8}-[0-9a-f]{4}-[1-5][0-9a-f]{3}-[89ab][0-9a-f]{3}-[0-9a-f]{12}$
-                          type: string
-                        testName:
-                          description: name of the test
-                          type: string
-                      title: test
-                      type: object
-                    title: tests
-                    type: array
-                title: tests
+                $ref: '#/components/schemas/tests_project'
           description: OK
         "401":
           description: Authentication failed
@@ -470,6 +451,21 @@ components:
       - accessToken
       title: logout_account
       type: object
+    test:
+      description: test to perform
+      example:
+        testID: testID
+        testName: testName
+      properties:
+        testID:
+          description: id of the test
+          pattern: ^[0-9a-f]{8}-[0-9a-f]{4}-[1-5][0-9a-f]{3}-[89ab][0-9a-f]{3}-[0-9a-f]{12}$
+          type: string
+        testName:
+          description: name of the test
+          type: string
+      title: test
+      type: object
     sign_up:
       description: schema for signing up
       properties:
@@ -608,28 +604,22 @@ components:
       - grantType
       title: login_account
       type: object
-    get_account_id_response:
-      description: response to provide account details
+    tests_project:
+      description: tests that the account needs to perform for this specific project
       example:
-        Email: Email
-        ID: ID
-        Name: Name
+        testsToPerform:
+        - testID: testID
+          testName: testName
+        - testID: testID
+          testName: testName
       properties:
-        ID:
-          description: The id of the account
-          pattern: ^[0-9a-f]{8}-[0-9a-f]{4}-[1-5][0-9a-f]{3}-[89ab][0-9a-f]{3}-[0-9a-f]{12}$
-          type: string
-        Name:
-          description: the name of the account
-          type: string
-        Email:
-          description: the email address of the account
-          type: string
-      required:
-      - Email
-      - ID
-      - Name
-      title: get_account_id_response
+        testsToPerform:
+          description: array of tests
+          items:
+            $ref: '#/components/schemas/test'
+          title: tests
+          type: array
+      title: tests_project
       type: object
     generic_test:
       description: schema of a generic test
@@ -675,23 +665,6 @@ components:
       - title
       title: generic_test
       type: object
-    projects_account_id:
-      description: response with the projects of a specific account
-      example:
-        projects:
-        - projectName: projectName
-          projectID: projectID
-        - projectName: projectName
-          projectID: projectID
-      properties:
-        projects:
-          description: an array with all projects
-          items:
-            $ref: '#/components/schemas/project'
-          title: projects
-          type: array
-      title: projects_account_id
-      type: object
     generic_test_questions:
       example:
         question: question
@@ -713,4 +686,44 @@ components:
           items:
             type: string
           type: array
+      type: object
+    get_account_id_response:
+      description: response to provide account details
+      example:
+        Email: Email
+        ID: ID
+        Name: Name
+      properties:
+        ID:
+          description: The id of the account
+          pattern: ^[0-9a-f]{8}-[0-9a-f]{4}-[1-5][0-9a-f]{3}-[89ab][0-9a-f]{3}-[0-9a-f]{12}$
+          type: string
+        Name:
+          description: the name of the account
+          type: string
+        Email:
+          description: the email address of the account
+          type: string
+      required:
+      - Email
+      - ID
+      - Name
+      title: get_account_id_response
+      type: object
+    projects_account_id:
+      description: response with the projects of a specific account
+      example:
+        projects:
+        - projectName: projectName
+          projectID: projectID
+        - projectName: projectName
+          projectID: projectID
+      properties:
+        projects:
+          description: an array with all projects
+          items:
+            $ref: '#/components/schemas/project'
+          title: projects
+          type: array
+      title: projects_account_id
       type: object
