@@ -454,6 +454,7 @@ components:
     test:
       description: test to perform
       example:
+        testType: generic
         testID: testID
         testName: testName
       properties:
@@ -463,6 +464,13 @@ components:
           type: string
         testName:
           description: name of the test
+          type: string
+        testType:
+          description: type of the test
+          enum:
+          - generic
+          - stroopDirection
+          - stroopColor
           type: string
       title: test
       type: object
@@ -608,9 +616,11 @@ components:
       description: tests that the account needs to perform for this specific project
       example:
         testsToPerform:
-        - testID: testID
+        - testType: generic
+          testID: testID
           testName: testName
-        - testID: testID
+        - testType: generic
+          testID: testID
           testName: testName
       properties:
         testsToPerform:

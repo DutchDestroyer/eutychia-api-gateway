@@ -17,4 +17,7 @@ type Test struct {
 
 	// name of the test
 	TestName string `json:"testName,omitempty"`
+
+	// type of the test
+	TestType string `json:"testType,omitempty"`
 }

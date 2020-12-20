@@ -100,7 +100,7 @@ func (s *DefaultApiService) GetGenericTestOfProject(ctx context.Context, project
 		},
 	}
 
-	return Response(http.StatusNotImplemented,
+	return Response(http.StatusOK,
 		GenericTest{Title: "Title of generic test",
 			Description:    "Description of the test bla bla bla",
 			DisplayAnswers: true,
@@ -147,14 +147,17 @@ func (s *DefaultApiService) GetTestsToPerformByAccount(ctx context.Context, proj
 		{
 			TestID:   "7b43fcf0-be12-4f91-8baa-fcdcac8118d5",
 			TestName: "Test 1",
+			TestType: "generic",
 		},
 		{
 			TestID:   "7b43fcf0-be12-4f91-8baa-fcdcac8118d5",
 			TestName: "Test 2",
+			TestType: "generic",
 		},
 		{
 			TestID:   "",
 			TestName: "Incorrect, should throw error",
+			TestType: "generic",
 		},
 	}
 
