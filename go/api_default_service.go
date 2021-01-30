@@ -81,7 +81,7 @@ func (s *DefaultApiService) GetAccountByID(ctx context.Context, accountID string
 func (s *DefaultApiService) GetGenericTestOfProject(ctx context.Context, projectID string, testID string) (ImplResponse, error) {
 	// TODO - update GetGenericTestOfProject with the required logic for this service method.
 
-	if !services.IsCorrectUUID(projectID) || !uuidvalidator.IsCorrectUUID(testID) {
+	if !services.IsCorrectUUID(projectID) || !services.IsCorrectUUID(testID) {
 		return Response(http.StatusBadRequest, nil), errors.New("Incorrect data provided by client")
 	}
 
