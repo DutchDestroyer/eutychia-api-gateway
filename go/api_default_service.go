@@ -16,9 +16,8 @@ import (
 	"net/http"
 	"time"
 
+	"github.com/DutchDestroyer/eutychia-api-gateway/services"
 	"github.com/dgrijalva/jwt-go"
-
-	uuidvalidator "github.com/DutchDestroyer/eutychia-api-gateway/services"
 )
 
 // DefaultApiService is a service that implents the logic for the DefaultApiServicer
@@ -62,7 +61,7 @@ func (s *DefaultApiService) DeleteAccountByID(ctx context.Context, accountID str
 func (s *DefaultApiService) GetAccountByID(ctx context.Context, accountID string) (ImplResponse, error) {
 	// TODO - update GetAccountByID with the required logic for this service method.
 
-	if !uuidvalidator.IsCorrectUUID(accountID) {
+	if !services.IsCorrectUUID(accountID) {
 		return Response(http.StatusBadRequest, nil), errors.New("Incorrect data provided by client")
 	}
 
@@ -82,7 +81,7 @@ func (s *DefaultApiService) GetAccountByID(ctx context.Context, accountID string
 func (s *DefaultApiService) GetGenericTestOfProject(ctx context.Context, projectID string, testID string) (ImplResponse, error) {
 	// TODO - update GetGenericTestOfProject with the required logic for this service method.
 
-	if !uuidvalidator.IsCorrectUUID(projectID) || !uuidvalidator.IsCorrectUUID(testID) {
+	if !services.IsCorrectUUID(projectID) || !uuidvalidator.IsCorrectUUID(testID) {
 		return Response(http.StatusBadRequest, nil), errors.New("Incorrect data provided by client")
 	}
 
@@ -117,7 +116,7 @@ func (s *DefaultApiService) GetGenericTestOfProject(ctx context.Context, project
 func (s *DefaultApiService) GetProjectsOfAccount(ctx context.Context, accountID string) (ImplResponse, error) {
 	// TODO - update GetProjectsOfAccount with the required logic for this service method.
 
-	if !uuidvalidator.IsCorrectUUID(accountID) {
+	if !services.IsCorrectUUID(accountID) {
 		return Response(http.StatusBadRequest, nil), errors.New("Incorrect data provided by client")
 	}
 
@@ -143,7 +142,7 @@ func (s *DefaultApiService) GetProjectsOfAccount(ctx context.Context, accountID 
 func (s *DefaultApiService) GetTestsToPerformByAccount(ctx context.Context, projectID string, accountID string) (ImplResponse, error) {
 	// TODO - update GetTestsToPerformByAccount with the required logic for this service method.
 
-	if !uuidvalidator.IsCorrectUUID(projectID) || !uuidvalidator.IsCorrectUUID(accountID) {
+	if !services.IsCorrectUUID(projectID) || !services.IsCorrectUUID(accountID) {
 		return Response(http.StatusBadRequest, nil), errors.New("Incorrect data provided by client")
 	}
 
@@ -202,8 +201,9 @@ func (s *DefaultApiService) LogInWithAccount(ctx context.Context, loginAccount L
 
 	// Declare the token with the algorithm used for signing, and the claims
 	token := jwt.NewWithClaims(jwt.SigningMethodHS256, claims)
+	key := newRandomKey()
 	// Create the JWT string
-	tokenString, err := token.SignedString(newRandomKey)
+	tokenString, err := token.SignedString(key)
 
 	if err != nil {
 		return Response(http.StatusInternalServerError, nil), errors.New("could not create the jwt token")

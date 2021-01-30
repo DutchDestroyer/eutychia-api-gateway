@@ -15,6 +15,8 @@ import (
 	"net/http"
 	"os"
 	"strconv"
+
+	"github.com/DutchDestroyer/eutychia-api-gateway/services"
 	"github.com/gorilla/handlers"
 	"github.com/gorilla/mux"
 )
@@ -31,7 +33,7 @@ type Route struct {
 type Routes []Route
 
 // Router defines the required methods for retrieving api routes
-type Router interface { 
+type Router interface {
 	Routes() Routes
 }
 
@@ -43,7 +45,9 @@ func NewRouter(routers ...Router) *mux.Router {
 			var handler http.Handler
 			handler = route.HandlerFunc
 			handler = Logger(handler, route.Name)
-			handler = handlers.CORS()(handler)
+			handler = handlers.CORS(
+				handlers.AllowedMethods(services.ValidHTTPTypes),
+				handlers.AllowedHeaders(services.ValidHeaders))(handler)
 
 			router.
 				Methods(route.Method).
