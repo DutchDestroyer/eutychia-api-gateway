@@ -11,8 +11,12 @@ package openapi
 
 import (
 	"context"
+	"crypto/rand"
 	"errors"
 	"net/http"
+	"time"
+
+	"github.com/dgrijalva/jwt-go"
 
 	uuidvalidator "github.com/DutchDestroyer/eutychia-api-gateway/services"
 )
@@ -132,7 +136,7 @@ func (s *DefaultApiService) GetProjectsOfAccount(ctx context.Context, accountID 
 		},
 	}
 
-	return Response(200, ProjectsAccountId{Projects: projects}), nil
+	return Response(http.StatusOK, ProjectsAccountId{Projects: projects}), nil
 }
 
 // GetTestsToPerformByAccount -
@@ -164,14 +168,48 @@ func (s *DefaultApiService) GetTestsToPerformByAccount(ctx context.Context, proj
 	return Response(http.StatusOK, TestsProject{TestsToPerform: testProjects}), nil
 }
 
+func newRandomKey() []byte {
+	key := make([]byte, 32)
+	if _, err := rand.Read(key); err != nil {
+		// really, what are you gonna do if randomness failed?
+		panic(err)
+	}
+
+	return key
+}
+
+// Claims create a struct that will be encoded to a JWT.
+type Claims struct {
+	Username string `json:"username"`
+	jwt.StandardClaims
+}
+
 // LogInWithAccount -
 func (s *DefaultApiService) LogInWithAccount(ctx context.Context, loginAccount LoginAccount) (ImplResponse, error) {
 	// TODO - update LogInWithAccount with the required logic for this service method.
 
-	return Response(200, AccountDetails{
-		AccountID:    "7b43fcf0-be12-4f91-8baa-fcdcac8118d5",
-		AccessToken:  "cdbac82e-3b19-4351-bb82-9feb36327a5a",
-		RefreshToken: "21ab4555-17a3-4db7-a814-cacfce5f6e1c"}), nil
+	// Declare the expiration time of the token
+	// here, we have kept it as 5 minutes
+	expirationTime := time.Now().Add(5 * time.Minute)
+	// Create the JWT claims, which includes the username and expiry time
+	claims := &Claims{
+		Username: loginAccount.EmailAddress,
+		StandardClaims: jwt.StandardClaims{
+			// In JWT, the expiry time is expressed as unix milliseconds
+			ExpiresAt: expirationTime.Unix(),
+		},
+	}
+
+	// Declare the token with the algorithm used for signing, and the claims
+	token := jwt.NewWithClaims(jwt.SigningMethodHS256, claims)
+	// Create the JWT string
+	tokenString, err := token.SignedString(newRandomKey)
+
+	if err != nil {
+		return Response(http.StatusInternalServerError, nil), errors.New("could not create the jwt token")
+	}
+
+	return Response(http.StatusOK, JwtAccountDetails{tokenString}), nil
 }
 
 // LogOutWithAccount -
@@ -182,6 +220,27 @@ func (s *DefaultApiService) LogOutWithAccount(ctx context.Context, logoutAccount
 	//return Response(200, nil),nil
 
 	return Response(http.StatusNotImplemented, nil), errors.New("LogOutWithAccount method not implemented")
+}
+
+// RefreshAccessToken -
+func (s *DefaultApiService) RefreshAccessToken(ctx context.Context, refreshDetails RefreshDetails) (ImplResponse, error) {
+
+	// TODO - update RefreshAccessToken with the required logic for this service method.
+	// Add api_default_service.go to the .openapi-generator-ignore to avoid overwriting this service implementation when updating open api generation.
+
+	//TODO: Uncomment the next line to return response Response(200, AccountDetails{}) or use other options such as http.Ok ...
+	//return Response(200, JwtAccountDetails{}), nil
+
+	//TODO: Uncomment the next line to return response Response(400, {}) or use other options such as http.Ok ...
+	//return Response(400, nil),nil
+
+	//TODO: Uncomment the next line to return response Response(401, {}) or use other options such as http.Ok ...
+	//return Response(401, nil),nil
+
+	//TODO: Uncomment the next line to return response Response(404, {}) or use other options such as http.Ok ...
+	//return Response(404, nil),nil
+
+	return Response(http.StatusNotImplemented, nil), errors.New("RefreshAccessToken method not implemented")
 }
 
 // SendEmailForSignUp -

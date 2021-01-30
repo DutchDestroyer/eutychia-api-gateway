@@ -79,6 +79,12 @@ func (c *DefaultApiController) Routes() Routes {
 			c.LogOutWithAccount,
 		},
 		{
+			"RefreshAccessToken",
+			strings.ToUpper("Post"),
+			"/api/authentication/refresh",
+			c.RefreshAccessToken,
+		},
+		{
 			"SendEmailForSignUp",
 			strings.ToUpper("Post"),
 			"/api/signup",
@@ -217,6 +223,25 @@ func (c *DefaultApiController) LogOutWithAccount(w http.ResponseWriter, r *http.
 	}
 	
 	result, err := c.service.LogOutWithAccount(r.Context(), *logoutAccount)
+	//If an error occured, encode the error with the status code
+	if err != nil {
+		EncodeJSONResponse(err.Error(), &result.Code, w)
+		return
+	}
+	//If no error, encode the body and the result code
+	EncodeJSONResponse(result.Body, &result.Code, w)
+	
+}
+
+// RefreshAccessToken - 
+func (c *DefaultApiController) RefreshAccessToken(w http.ResponseWriter, r *http.Request) { 
+	refreshDetails := &RefreshDetails{}
+	if err := json.NewDecoder(r.Body).Decode(&refreshDetails); err != nil {
+		w.WriteHeader(500)
+		return
+	}
+	
+	result, err := c.service.RefreshAccessToken(r.Context(), *refreshDetails)
 	//If an error occured, encode the error with the status code
 	if err != nil {
 		EncodeJSONResponse(err.Error(), &result.Code, w)

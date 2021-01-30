@@ -28,6 +28,7 @@ type DefaultApiRouter interface {
 	GetTestsToPerformByAccount(http.ResponseWriter, *http.Request)
 	LogInWithAccount(http.ResponseWriter, *http.Request)
 	LogOutWithAccount(http.ResponseWriter, *http.Request)
+	RefreshAccessToken(http.ResponseWriter, *http.Request)
 	SendEmailForSignUp(http.ResponseWriter, *http.Request)
 	SubmitAnswerToTest(http.ResponseWriter, *http.Request)
 }
@@ -46,6 +47,7 @@ type DefaultApiServicer interface {
 	GetTestsToPerformByAccount(context.Context, string, string) (ImplResponse, error)
 	LogInWithAccount(context.Context, LoginAccount) (ImplResponse, error)
 	LogOutWithAccount(context.Context, LogoutAccount) (ImplResponse, error)
+	RefreshAccessToken(context.Context, RefreshDetails) (ImplResponse, error)
 	SendEmailForSignUp(context.Context, SignUp) (ImplResponse, error)
 	SubmitAnswerToTest(context.Context, string, string, GenericTestAnswers) (ImplResponse, error)
 }

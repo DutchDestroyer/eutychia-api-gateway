@@ -20,6 +20,6 @@ type LoginAccount struct {
 	// password of the account to log in with
 	Password string `json:"password,omitempty"`
 
-	// refreshtoken of the account to log in with
-	RefreshToken string `json:"refreshToken,omitempty"`
+	// accesstoken of the account to log in with
+	AccessToken string `json:"accessToken,omitempty"`
 }
