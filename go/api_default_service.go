@@ -209,7 +209,7 @@ func (s *DefaultApiService) LogInWithAccount(ctx context.Context, loginAccount L
 		return Response(http.StatusInternalServerError, nil), errors.New("could not create the jwt token")
 	}
 
-	return Response(http.StatusOK, JwtAccountDetails{tokenString}), nil
+	return Response(http.StatusOK, AccountDetails{"7b43fcf0-be12-4f91-8baa-fcdcac8118d5", tokenString, tokenString}), nil
 }
 
 // LogOutWithAccount -

@@ -9,10 +9,10 @@
 
 package openapi
 
-// AccountDetails - the account details provided when the user logs in
+// AccountDetails - the account details provided when the user logs in as a JWT token
 type AccountDetails struct {
 
-	// The account ID.
+	// The account id.
 	AccountID string `json:"accountID"`
 
 	// The access token.

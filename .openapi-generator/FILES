@@ -6,6 +6,7 @@ go/helpers.go
 go/impl.go
 go/logger.go
 go/model_account_creation.go
+go/model_account_details.go
 go/model_answer_to_question.go
 go/model_generic_test_.go
 go/model_generic_test_answers.go

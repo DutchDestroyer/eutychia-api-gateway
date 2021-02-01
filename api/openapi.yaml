@@ -155,9 +155,11 @@ paths:
           content:
             application/json:
               example:
-                JWT: eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJhY2NvdW50SUQiOiIxMjM0NTY3ODkwIiwibmFtZSI6Ik1hcmsgV2lqbmJlcmdlbiIsImFjY2Vzc3Rva2VuIjoxNTE2MjM5MDIyLCJyZWZyZXNodG9rZW4iOjc1Mzk3NTM1N30.V1JMLTr7R_yPdkbpZQ9kpUmmmq8cyEbpNRk5B78fpYw
+                accountID: 0a8ba9ad-a93d-4991-8c23-c178b09fe6a2
+                accessToken: eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJhY2NvdW50SUQiOiIxMjM0NTY3ODkwIiwibmFtZSI6Ik1hcmsgV2lqbmJlcmdlbiIsImFjY2Vzc3Rva2VuIjoxNTE2MjM5MDIyLCJyZWZyZXNodG9rZW4iOjc1Mzk3NTM1N30.V1JMLTr7R_yPdkbpZQ9kpUmmmq8cyEbpNRk5B78fpYw
+                refreshToken: eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJhY2NvdW50SUQiOiIxMjM0NTY3ODkwIiwibmFtZSI6Ik1hcmsgV2lqbmJlcmdlbiIsImFjY2Vzc3Rva2VuIjoxNTE2MjM5MDIyLCJyZWZyZXNodG9rZW4iOjc1Mzk3NTM1N30.V1JMLTr7R_yPdkbpZQ9kpUmmmq8cyEbpNRk5B78fpYw
               schema:
-                $ref: '#/components/schemas/JWT_account_details'
+                $ref: '#/components/schemas/Account_details'
           description: OK
         "400":
           description: The specified account ID is invalid
@@ -807,6 +809,28 @@ components:
       - accountID
       - refreshToken
       title: Refresh details
+      type: object
+    Account_details:
+      description: the account details provided when the user logs in as a JWT token
+      example:
+        accountID: accountID
+        accessToken: accessToken
+        refreshToken: refreshToken
+      properties:
+        accountID:
+          description: The account id.
+          type: string
+        accessToken:
+          description: The access token.
+          type: string
+        refreshToken:
+          description: The refresh token.
+          type: string
+      required:
+      - accessToken
+      - accountID
+      - refreshToken
+      title: Account details
       type: object
     get_account_id_response:
       description: response to provide account details
