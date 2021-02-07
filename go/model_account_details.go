@@ -20,4 +20,7 @@ type AccountDetails struct {
 
 	// The refresh token.
 	RefreshToken string `json:"refreshToken"`
+
+	// type of account
+	AccountType string `json:"accountType"`
 }
