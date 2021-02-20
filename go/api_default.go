@@ -37,6 +37,18 @@ func (c *DefaultApiController) Routes() Routes {
 			c.CreateNewAccount,
 		},
 		{
+			"CreatesNewProject",
+			strings.ToUpper("Post"),
+			"/api/accounts/{accountID}/projects",
+			c.CreatesNewProject,
+		},
+		{
+			"CreatesNewProject",
+			strings.ToUpper("Options"),
+			"/api/accounts/{accountID}/projects",
+			c.CreatesNewProject,
+		},
+		{
 			"DeleteAccountByID",
 			strings.ToUpper("Delete"),
 			"/api/accounts/{accountID}",
@@ -47,6 +59,12 @@ func (c *DefaultApiController) Routes() Routes {
 			strings.ToUpper("Get"),
 			"/api/accounts/{accountID}",
 			c.GetAccountByID,
+		},
+		{
+			"GetAllTests",
+			strings.ToUpper("Get"),
+			"/api/test/{accountID}",
+			c.GetAllTests,
 		},
 		{
 			"GetGenericTestOfProject",
@@ -124,6 +142,27 @@ func (c *DefaultApiController) CreateNewAccount(w http.ResponseWriter, r *http.R
 
 }
 
+// CreatesNewProject -
+func (c *DefaultApiController) CreatesNewProject(w http.ResponseWriter, r *http.Request) {
+	params := mux.Vars(r)
+	accountID := params["accountID"]
+	createProject := &CreateProject{}
+	if err := json.NewDecoder(r.Body).Decode(&createProject); err != nil {
+		w.WriteHeader(500)
+		return
+	}
+
+	result, err := c.service.CreatesNewProject(r.Context(), accountID, *createProject)
+	//If an error occured, encode the error with the status code
+	if err != nil {
+		EncodeJSONResponse(err.Error(), &result.Code, w)
+		return
+	}
+	//If no error, encode the body and the result code
+	EncodeJSONResponse(result.Body, &result.Code, w)
+
+}
+
 // DeleteAccountByID -
 func (c *DefaultApiController) DeleteAccountByID(w http.ResponseWriter, r *http.Request) {
 	params := mux.Vars(r)
@@ -144,6 +183,21 @@ func (c *DefaultApiController) GetAccountByID(w http.ResponseWriter, r *http.Req
 	params := mux.Vars(r)
 	accountID := params["accountID"]
 	result, err := c.service.GetAccountByID(r.Context(), accountID)
+	//If an error occured, encode the error with the status code
+	if err != nil {
+		EncodeJSONResponse(err.Error(), &result.Code, w)
+		return
+	}
+	//If no error, encode the body and the result code
+	EncodeJSONResponse(result.Body, &result.Code, w)
+
+}
+
+// GetAllTests -
+func (c *DefaultApiController) GetAllTests(w http.ResponseWriter, r *http.Request) {
+	params := mux.Vars(r)
+	accountID := params["accountID"]
+	result, err := c.service.GetAllTests(r.Context(), accountID)
 	//If an error occured, encode the error with the status code
 	if err != nil {
 		EncodeJSONResponse(err.Error(), &result.Code, w)

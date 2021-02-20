@@ -21,8 +21,10 @@ import (
 // pass the data to a DefaultApiServicer to perform the required actions, then write the service results to the http response.
 type DefaultApiRouter interface { 
 	CreateNewAccount(http.ResponseWriter, *http.Request)
+	CreatesNewProject(http.ResponseWriter, *http.Request)
 	DeleteAccountByID(http.ResponseWriter, *http.Request)
 	GetAccountByID(http.ResponseWriter, *http.Request)
+	GetAllTests(http.ResponseWriter, *http.Request)
 	GetGenericTestOfProject(http.ResponseWriter, *http.Request)
 	GetProjectsOfAccount(http.ResponseWriter, *http.Request)
 	GetTestsToPerformByAccount(http.ResponseWriter, *http.Request)
@@ -40,8 +42,10 @@ type DefaultApiRouter interface {
 // and updated with the logic required for the API.
 type DefaultApiServicer interface { 
 	CreateNewAccount(context.Context, AccountCreation) (ImplResponse, error)
+	CreatesNewProject(context.Context, string, CreateProject) (ImplResponse, error)
 	DeleteAccountByID(context.Context, string) (ImplResponse, error)
 	GetAccountByID(context.Context, string) (ImplResponse, error)
+	GetAllTests(context.Context, string) (ImplResponse, error)
 	GetGenericTestOfProject(context.Context, string, string) (ImplResponse, error)
 	GetProjectsOfAccount(context.Context, string) (ImplResponse, error)
 	GetTestsToPerformByAccount(context.Context, string, string) (ImplResponse, error)

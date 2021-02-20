@@ -107,6 +107,72 @@ paths:
           description: Account not found
       security:
       - ApiKeyAuth: []
+    post:
+      description: Creates a new project
+      operationId: CreatesNewProject
+      parameters:
+      - description: The ID of the account
+        explode: false
+        in: path
+        name: accountID
+        required: true
+        schema:
+          description: the schema to fetch the projects of a specific account
+          example: 0a8ba9ad-a93d-4991-8c23-c178b09fe6a1
+          pattern: ^[0-9a-f]{8}-[0-9a-f]{4}-[1-5][0-9a-f]{3}-[89ab][0-9a-f]{3}-[0-9a-f]{12}$
+          title: schema_projects_account_id
+          type: string
+        style: simple
+      requestBody:
+        $ref: '#/components/requestBodies/create_project'
+        content:
+          application/json:
+            example:
+              projectTitle: Example Project
+              participants:
+              - firstmame: Mark
+                lastname: Wijnbergen
+                emailAddress: markwijnbergen@hey.com
+              - firstname: John
+                lastname: Doe
+                emailAddress: johndoe@bla.com
+              tests:
+              - test1
+              - test2
+            schema:
+              properties:
+                projectTitle:
+                  description: title of project
+                  type: string
+                participants:
+                  description: participants of project
+                  items:
+                    $ref: '#/components/schemas/participant'
+                  title: participants
+                  type: array
+                tests:
+                  description: tests to perform as part of this project
+                  items:
+                    description: names of tests to perform
+                    type: string
+                  title: tests
+                  type: array
+              required:
+              - participants
+              - projectTitle
+              - tests
+              title: create_project
+              type: object
+        required: true
+      responses:
+        "200":
+          description: OK
+        "400":
+          description: The specified account ID is invalid
+        "401":
+          description: Authentication failed
+        "404":
+          description: Account not found
   /authentication/login:
     post:
       description: logging in the account
@@ -512,6 +578,49 @@ paths:
           description: Account not found
       security:
       - ApiKeyAuth: []
+  /test/{accountID}:
+    get:
+      description: Get all tests that are stored in the backend and are accessible
+        for this account
+      operationId: GetAllTests
+      parameters:
+      - description: The ID of the account to return (UUID)
+        explode: false
+        in: path
+        name: accountID
+        required: true
+        schema:
+          description: the id of the account to get the tests from
+          example: 0a8ba9ad-a93d-4991-8c23-c178b09fe6a2
+          pattern: ^[0-9a-f]{8}-[0-9a-f]{4}-[1-5][0-9a-f]{3}-[89ab][0-9a-f]{3}-[0-9a-f]{12}$
+          title: account_id
+          type: string
+        style: simple
+      responses:
+        "200":
+          content:
+            application/json:
+              example:
+                tests:
+                - testID: 0a8ba9ad-a93d-4991-8c23-c178b09fe6a1
+                  testName: test 1
+                - testID: 0a8ba9ad-a93d-4991-8c23-c178b09fe6a2
+                  testName: test 2
+              schema:
+                description: all tests that researcher can address
+                items:
+                  $ref: '#/components/schemas/TestsForAccount'
+                title: TestsForAccount
+                type: array
+          description: OK
+        "400":
+          description: The specified account ID is invalid
+        "401":
+          description: Authentication failed
+        "404":
+          description: Account not found
+      security:
+      - ApiKeyAuth: []
 components:
   requestBodies:
     logout_account:
@@ -519,6 +628,12 @@ components:
         application/json:
           schema:
             $ref: '#/components/schemas/logout_account'
+      required: true
+    create_project:
+      content:
+        application/json:
+          schema:
+            $ref: '#/components/schemas/create_project'
       required: true
     sign_up:
       content:
@@ -698,6 +813,20 @@ components:
       - grantType
       title: login_account
       type: object
+    TestsForAccount:
+      example:
+        testID: testID
+        testName: testName
+      properties:
+        testID:
+          description: the id of a test
+          pattern: ^[0-9a-f]{8}-[0-9a-f]{4}-[1-5][0-9a-f]{3}-[89ab][0-9a-f]{3}-[0-9a-f]{12}$
+          type: string
+        testName:
+          description: the name of a test
+          type: string
+      title: TestsForAccount
+      type: object
     tests_project:
       description: tests that the account needs to perform for this specific project
       example:
@@ -761,6 +890,20 @@ components:
       - title
       title: generic_test
       type: object
+    participant:
+      description: participant of project
+      properties:
+        firstame:
+          description: firstname of the participant
+          type: string
+        lastname:
+          description: lastname of the participant
+          type: string
+        emailAddress:
+          description: email address of the participant
+          type: string
+      title: participant
+      type: object
     generic_test_questions:
       example:
         question: question
@@ -794,6 +937,30 @@ components:
       required:
       - JWT
       title: JWT account details
+      type: object
+    create_project:
+      properties:
+        projectTitle:
+          description: title of project
+          type: string
+        participants:
+          description: participants of project
+          items:
+            $ref: '#/components/schemas/participant'
+          title: participants
+          type: array
+        tests:
+          description: tests to perform as part of this project
+          items:
+            description: names of tests to perform
+            type: string
+          title: tests
+          type: array
+      required:
+      - participants
+      - projectTitle
+      - tests
+      title: create_project
       type: object
     Refresh_details:
       description: Details necessary to refresh the access token

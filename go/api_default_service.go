@@ -31,6 +31,42 @@ func NewDefaultApiService() DefaultApiServicer {
 	return &DefaultApiService{}
 }
 
+//GetAllTests
+func (s *DefaultApiService) GetAllTests(ctx context.Context, accountID string) (ImplResponse, error) {
+	if !services.IsCorrectUUID(accountID) {
+		return Response(http.StatusBadRequest, nil), errors.New("Incorrect data provided by client")
+	}
+
+	var allTests = []TestsForAccount{
+		{
+			TestID:   "7b43fcf0-be12-4f91-8baa-fcdcac8118d5",
+			TestName: "test 1",
+		},
+		{
+			TestID:   "7b43fcf0-be12-4f91-8baa-fcdcac8118d6",
+			TestName: "test 2",
+		},
+		{
+			TestID:   "7b43fcf0-be12-4f91-8baa-fcdcac8118d7",
+			TestName: "test 3",
+		},
+	}
+
+	return Response(http.StatusOK, allTests), nil
+}
+
+//CreatesNewProject
+func (s *DefaultApiService) CreatesNewProject(ctx context.Context, accountID string, createProject CreateProject) (ImplResponse, error) {
+	// TODO - update CreateNewAccount with the required logic for this service method.
+	if !services.IsCorrectUUID(accountID) {
+		return Response(http.StatusBadRequest, nil), errors.New("Incorrect data provided by client")
+	}
+	//TODO: Uncomment the next line to return response Response(200, {}) or use other options such as http.Ok ...
+	//return Response(200, nil),nil
+
+	return Response(http.StatusOK, nil), nil
+}
+
 // CreateNewAccount -
 func (s *DefaultApiService) CreateNewAccount(ctx context.Context, accountCreation AccountCreation) (ImplResponse, error) {
 	// TODO - update CreateNewAccount with the required logic for this service method.
