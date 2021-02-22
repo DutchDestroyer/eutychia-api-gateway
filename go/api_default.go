@@ -116,6 +116,12 @@ func (c *DefaultApiController) Routes() Routes {
 		},
 		{
 			"SubmitAnswerToTest",
+			strings.ToUpper("Options"),
+			"/api/projects/{projectID}/genericTests/{testID}",
+			c.SubmitAnswerToTest,
+		},
+		{
+			"SubmitAnswerToTest",
 			strings.ToUpper("Post"),
 			"/api/projects/{projectID}/genericTests/{testID}",
 			c.SubmitAnswerToTest,
