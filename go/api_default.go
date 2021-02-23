@@ -29,7 +29,7 @@ func NewDefaultApiController(s DefaultApiServicer) Router {
 
 // Routes returns all of the api route for the DefaultApiController
 func (c *DefaultApiController) Routes() Routes {
-	return Routes{
+	return append(Routes{
 		{
 			"CreateNewAccount",
 			strings.ToUpper("Post"),
@@ -39,12 +39,6 @@ func (c *DefaultApiController) Routes() Routes {
 		{
 			"CreatesNewProject",
 			strings.ToUpper("Post"),
-			"/api/accounts/{accountID}/projects",
-			c.CreatesNewProject,
-		},
-		{
-			"CreatesNewProject",
-			strings.ToUpper("Options"),
 			"/api/accounts/{accountID}/projects",
 			c.CreatesNewProject,
 		},
@@ -91,12 +85,6 @@ func (c *DefaultApiController) Routes() Routes {
 			c.LogInWithAccount,
 		},
 		{
-			"LogInWithAccount",
-			strings.ToUpper("Options"),
-			"/api/authentication/login",
-			c.LogInWithAccount,
-		},
-		{
 			"LogOutWithAccount",
 			strings.ToUpper("Post"),
 			"/api/authentication/revoke",
@@ -116,13 +104,30 @@ func (c *DefaultApiController) Routes() Routes {
 		},
 		{
 			"SubmitAnswerToTest",
-			strings.ToUpper("Options"),
+			strings.ToUpper("Post"),
 			"/api/projects/{projectID}/genericTests/{testID}",
 			c.SubmitAnswerToTest,
 		},
+	}, c.optionRoutes()...)
+}
+
+func (c *DefaultApiController) optionRoutes() Routes {
+	return Routes{
+		{
+			"CreatesNewProject",
+			strings.ToUpper("Options"),
+			"/api/accounts/{accountID}/projects",
+			c.CreatesNewProject,
+		},
+		{
+			"LogInWithAccount",
+			strings.ToUpper("Options"),
+			"/api/authentication/login",
+			c.LogInWithAccount,
+		},
 		{
 			"SubmitAnswerToTest",
-			strings.ToUpper("Post"),
+			strings.ToUpper("Options"),
 			"/api/projects/{projectID}/genericTests/{testID}",
 			c.SubmitAnswerToTest,
 		},
