@@ -131,6 +131,12 @@ func (c *DefaultApiController) optionRoutes() Routes {
 			"/api/projects/{projectID}/genericTests/{testID}",
 			c.SubmitAnswerToTest,
 		},
+		{
+			"GetProjectsOfAccount",
+			strings.ToUpper("Options"),
+			"/api/accounts/{accountID}/projects",
+			c.GetProjectsOfAccount,
+		},
 	}
 }
 

@@ -14,10 +14,8 @@ import (
 	"crypto/rand"
 	"errors"
 	"net/http"
-	"time"
 
 	"github.com/DutchDestroyer/eutychia-api-gateway/services"
-	"github.com/dgrijalva/jwt-go"
 )
 
 // DefaultApiService is a service that implents the logic for the DefaultApiServicer
@@ -213,39 +211,30 @@ func newRandomKey() []byte {
 	return key
 }
 
-// Claims create a struct that will be encoded to a JWT.
-type Claims struct {
-	Username string `json:"username"`
-	jwt.StandardClaims
-}
-
 // LogInWithAccount -
 func (s *DefaultApiService) LogInWithAccount(ctx context.Context, loginAccount LoginAccount) (ImplResponse, error) {
-	// TODO - update LogInWithAccount with the required logic for this service method.
 
-	// Declare the expiration time of the token
-	// here, we have kept it as 5 minutes
-	expirationTime := time.Now().Add(5 * time.Minute)
-	// Create the JWT claims, which includes the username and expiry time
-	claims := &Claims{
-		Username: loginAccount.EmailAddress,
-		StandardClaims: jwt.StandardClaims{
-			// In JWT, the expiry time is expressed as unix milliseconds
-			ExpiresAt: expirationTime.Unix(),
-		},
-	}
+	// create the account
+	/*account := *accountservices.CreateAccount(loginAccount.EmailAddress, loginAccount.Password, loginAccount.AccessToken)
 
-	// Declare the token with the algorithm used for signing, and the claims
-	token := jwt.NewWithClaims(jwt.SigningMethodHS256, claims)
-	key := newRandomKey()
-	// Create the JWT string
-	tokenString, err := token.SignedString(key)
+	// validate the account is correct
+	if loginAccount.GrantType == "password" {
+		validationError := accountservices.IsValidPasswordLogin(account)
+		if validationError != nil {
+			return Response(http.StatusUnauthorized, nil), validationError
+		}
+	} else if loginAccount.GrantType == "autenthicationToken" {
+		validationError := accountservices.IsValidToken(account)
+		if validationError != nil {
+			return Response(http.StatusUnauthorized, nil), validationError
+		}
+	} else {
+		return Response(http.StatusBadRequest, nil), errors.New("grant type not recognized")
+	}*/
 
-	if err != nil {
-		return Response(http.StatusInternalServerError, nil), errors.New("could not create the jwt token")
-	}
+	// Okay, login credentials are correct, lets get the full account details and return those to the user
 
-	return Response(http.StatusOK, AccountDetails{"7b43fcf0-be12-4f91-8baa-fcdcac8118d5", tokenString, tokenString, "researcher"}), nil
+	return Response(http.StatusOK, AccountDetails{"7b43fcf0-be12-4f91-8baa-fcdcac8118d5", "refreshToken", "accessToken", "researcher"}), nil
 }
 
 // LogOutWithAccount -

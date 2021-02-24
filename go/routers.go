@@ -16,7 +16,7 @@ import (
 	"os"
 	"strconv"
 
-	"github.com/DutchDestroyer/eutychia-api-gateway/services"
+	servicecors "github.com/DutchDestroyer/eutychia-api-gateway/services/cors"
 	"github.com/gorilla/handlers"
 	"github.com/gorilla/mux"
 )
@@ -46,8 +46,8 @@ func NewRouter(routers ...Router) *mux.Router {
 			handler = route.HandlerFunc
 			handler = Logger(handler, route.Name)
 			handler = handlers.CORS(
-				handlers.AllowedMethods(services.ValidHTTPTypes),
-				handlers.AllowedHeaders(services.ValidHeaders))(handler)
+				handlers.AllowedMethods(servicecors.ValidHTTPTypes),
+				handlers.AllowedHeaders(servicecors.ValidHeaders))(handler)
 
 			router.
 				Methods(route.Method).
