@@ -13,4 +13,6 @@ type Account struct {
 	AccountID string
 
 	AccountType string
+
+	SessionID string
 }

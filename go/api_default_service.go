@@ -16,6 +16,8 @@ import (
 	"net/http"
 
 	"github.com/DutchDestroyer/eutychia-api-gateway/services"
+	"github.com/DutchDestroyer/eutychia-api-gateway/services/account"
+	"github.com/DutchDestroyer/eutychia-api-gateway/services/authentication"
 )
 
 // DefaultApiService is a service that implents the logic for the DefaultApiServicer
@@ -215,26 +217,42 @@ func newRandomKey() []byte {
 func (s *DefaultApiService) LogInWithAccount(ctx context.Context, loginAccount LoginAccount) (ImplResponse, error) {
 
 	// create the account
-	/*account := *accountservices.CreateAccount(loginAccount.EmailAddress, loginAccount.Password, loginAccount.AccessToken)
+	account := account.CreateAccount(loginAccount.EmailAddress, loginAccount.Password, loginAccount.RefreshToken, loginAccount.AccountID, loginAccount.SessionID)
 
 	// validate the account is correct
 	if loginAccount.GrantType == "password" {
-		validationError := accountservices.IsValidPasswordLogin(account)
+		// Validate password and obtain accountID of account
+		accountID, validationError := authentication.IsValidPasswordLogin(*account)
 		if validationError != nil {
 			return Response(http.StatusUnauthorized, nil), validationError
 		}
-	} else if loginAccount.GrantType == "autenthicationToken" {
-		validationError := accountservices.IsValidToken(account)
+
+		// assign account ID
+		account.AccountID = accountID
+
+		// Create authentication for account
+		authError := authentication.CreateAccountAuthentication(account)
+
+		if authError != nil {
+			return Response(http.StatusInternalServerError, nil), authError
+		}
+	} else if loginAccount.GrantType == "refreshToken" {
+		validationError := authentication.IsValidTokenLogin(*account)
 		if validationError != nil {
 			return Response(http.StatusUnauthorized, nil), validationError
+		}
+
+		// Create new authtoken for account
+		authError := authentication.UpdateAccountAuthentication(account)
+		if authError != nil {
+			return Response(http.StatusInternalServerError, nil), authError
 		}
 	} else {
 		return Response(http.StatusBadRequest, nil), errors.New("grant type not recognized")
-	}*/
+	}
 
-	// Okay, login credentials are correct, lets get the full account details and return those to the user
-
-	return Response(http.StatusOK, AccountDetails{"7b43fcf0-be12-4f91-8baa-fcdcac8118d5", "refreshToken", "accessToken", "researcher"}), nil
+	return Response(http.StatusOK,
+		AccountDetails{account.AccountID, account.SessionID, account.AuthToken, account.RefreshToken, account.AccountType}), nil
 }
 
 // LogOutWithAccount -
