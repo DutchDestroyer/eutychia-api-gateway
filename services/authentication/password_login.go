@@ -3,13 +3,13 @@ package authentication
 import (
 	"errors"
 
-	accountmodels "github.com/DutchDestroyer/eutychia-api-gateway/account/models"
 	"github.com/DutchDestroyer/eutychia-api-gateway/database"
+	models "github.com/DutchDestroyer/eutychia-api-gateway/models"
 	"golang.org/x/crypto/bcrypt"
 )
 
 // IsValidPasswordLogin validates password
-func IsValidPasswordLogin(acc accountmodels.Account) (string, error) {
+func IsValidPasswordLogin(acc models.Account) (string, error) {
 	// Find email address in db
 	accountDAO, errDAO := database.GetDatabaseEntryBasedOnMail(acc.Username)
 
