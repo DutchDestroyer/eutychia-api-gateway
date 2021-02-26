@@ -17,6 +17,7 @@ func CreateAccountAuthentication(account *models.Account) error {
 	if authErr != nil {
 		return authErr
 	}
+
 	refreshToken, refreshTokenKey, refreshErr := createRefreshToken(account.AccountID, sessionID)
 	if refreshErr != nil {
 		return refreshErr
@@ -44,7 +45,6 @@ func UpdateAccountAuthentication(account *models.Account) error {
 	}
 
 	dbErr := database.UpdateSessionAuthToken(account.AccountID, account.SessionID, authToken, authTokenKey)
-
 	if dbErr != nil {
 		return dbErr
 	}

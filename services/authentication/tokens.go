@@ -14,9 +14,9 @@ import (
 // CreateToken Creates a token with a specific time
 func CreateToken(accountID string, sessionID string, timespan time.Duration) (string, rsa.PublicKey, error) {
 	alg := jwa.RS256
-	key, err := rsa.GenerateKey(rand.Reader, 2048)
-	if err != nil {
-		return "", rsa.PublicKey{}, err
+	key, errGenerate := rsa.GenerateKey(rand.Reader, 2048)
+	if errGenerate != nil {
+		return "", rsa.PublicKey{}, errGenerate
 	}
 
 	// store the public key in the db
@@ -25,9 +25,13 @@ func CreateToken(accountID string, sessionID string, timespan time.Duration) (st
 	token.Set("accountID", accountID)
 	token.Set("sessionID", sessionID)
 	token.Set("expiryDate", time.Now().UTC().Add(timespan))
-	signed, err := jwt.Sign(token, alg, key)
+	signed, errSign := jwt.Sign(token, alg, key)
 
-	return string(signed), key.PublicKey, err
+	if errSign != nil {
+		return "", rsa.PublicKey{}, errSign
+	}
+
+	return string(signed), key.PublicKey, nil
 }
 
 // ValidateToken validates the token
@@ -49,8 +53,7 @@ func ValidateToken(token string, accountID string, sessionID string, tokenType s
 		return errors.New("invalid token")
 	}
 
-	byteToken := []byte(token)
-	_, err := jwt.Parse(byteToken, jwt.WithValidate(true), jwt.WithVerify(jwa.RS256, tokenKey))
+	_, err := jwt.Parse([]byte(token), jwt.WithValidate(true), jwt.WithVerify(jwa.RS256, tokenKey))
 
 	return err
 }
