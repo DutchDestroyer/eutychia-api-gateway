@@ -222,13 +222,14 @@ func (s *DefaultApiService) LogInWithAccount(ctx context.Context, loginAccount L
 	// validate the account is correct
 	if loginAccount.GrantType == "password" {
 		// Validate password and obtain accountID of account
-		accountID, validationError := authentication.IsValidPasswordLogin(*account)
+		accountDAO, validationError := authentication.IsValidPasswordLogin(*account)
 		if validationError != nil {
 			return Response(http.StatusUnauthorized, nil), validationError
 		}
 
 		// assign account ID
-		account.AccountID = accountID
+		account.AccountID = accountDAO.AccountID
+		account.AccountType = accountDAO.AccountType
 
 		// Create authentication for account
 		authError := authentication.CreateAccountAuthentication(account)

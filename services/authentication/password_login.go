@@ -9,25 +9,25 @@ import (
 )
 
 // IsValidPasswordLogin validates password
-func IsValidPasswordLogin(acc models.Account) (string, error) {
+func IsValidPasswordLogin(acc models.Account) (database.AccountDAO, error) {
 	// Find email address in db
 	accountDAO, errDAO := database.GetDatabaseEntryBasedOnMail(acc.Username)
 
 	if errDAO != nil {
-		return "", errDAO
+		return database.AccountDAO{}, errDAO
 	}
 
 	saltedPassword, err := bcrypt.GenerateFromPassword([]byte(accountDAO.Password), bcrypt.MinCost)
 
 	if err != nil {
-		return "", err
+		return database.AccountDAO{}, err
 	}
 
 	if IsValidPassword(saltedPassword, []byte(acc.Password)) {
-		return accountDAO.AccountID, nil
+		return accountDAO, nil
 	}
 
-	return "", errors.New("Invalid email password combination")
+	return database.AccountDAO{}, errors.New("Invalid email password combination")
 }
 
 // IsValidPassword checks whether the password is valid
