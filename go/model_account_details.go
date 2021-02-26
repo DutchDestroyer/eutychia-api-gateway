@@ -15,6 +15,9 @@ type AccountDetails struct {
 	// The account id.
 	AccountID string `json:"accountID"`
 
+	// logged in SessionID
+	SessionID string `json:"sessionID"`
+
 	// The access token.
 	AccessToken string `json:"accessToken"`
 
