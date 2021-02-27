@@ -18,6 +18,7 @@ import (
 	"github.com/DutchDestroyer/eutychia-api-gateway/services"
 	"github.com/DutchDestroyer/eutychia-api-gateway/services/account"
 	"github.com/DutchDestroyer/eutychia-api-gateway/services/authentication"
+	"github.com/DutchDestroyer/eutychia-api-gateway/services/projects"
 )
 
 // DefaultApiService is a service that implents the logic for the DefaultApiServicer
@@ -156,22 +157,19 @@ func (s *DefaultApiService) GetProjectsOfAccount(ctx context.Context, accountID 
 		return Response(http.StatusBadRequest, nil), errors.New("Incorrect data provided by client")
 	}
 
-	var projects = []Project{
-		{
-			ProjectID:   "7b43fcf0-be12-4f91-8baa-fcdcac8118d5",
-			ProjectName: "Project 1",
-		},
-		{
-			ProjectID:   "7b43fcf0-be12-4f91-8baa-fcdcac8118d5",
-			ProjectName: "Project 2",
-		},
-		{
-			ProjectID:   "",
-			ProjectName: "This should throw an error",
-		},
+	projects, err := projects.GetProjectsAsParticipantForAccount(accountID)
+
+	if err != nil {
+		return Response(http.StatusInternalServerError, nil), err
 	}
 
-	return Response(http.StatusOK, ProjectsAccountId{Projects: projects}), nil
+	var projectsToReturn []Project
+
+	for i := range projects {
+		projectsToReturn = append(projectsToReturn, Project{projects[i].ID, projects[i].Name})
+	}
+
+	return Response(http.StatusOK, ProjectsAccountId{Projects: projectsToReturn}), nil
 }
 
 // GetTestsToPerformByAccount -
