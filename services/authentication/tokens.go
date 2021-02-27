@@ -34,6 +34,11 @@ func CreateToken(accountID string, sessionID string, timespan time.Duration) (st
 	return string(signed), key.PublicKey, nil
 }
 
+// ParseToken parses the token
+func ParseToken(token string) (jwt.Token, error) {
+	return jwt.Parse([]byte(token))
+}
+
 // ValidateToken validates the token
 func ValidateToken(token string, accountID string, sessionID string, tokenType string) error {
 
