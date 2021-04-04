@@ -32,33 +32,3 @@ func GetProjectsAsParticipantForAccount(accountID string) ([]models.Project, err
 func GetProjectsAsResearcherForAccount(accountID string) {
 
 }
-
-// GetTestsOfProject gets all the tests of a project
-func GetTestsOfProject(projectID string) ([]models.GenericTestOverview, error) {
-	projects, errGetProjects := database.GetProjects([]string{projectID})
-
-	if errGetProjects != nil {
-		return []models.GenericTestOverview{}, errGetProjects
-	}
-
-	var testIDs []string
-
-	for i := range projects {
-		testIDs = append(testIDs, projects[i].TestIDs...)
-	}
-
-	tests, errGetTests := database.GetTestsOfIDs(testIDs)
-
-	if errGetTests != nil {
-		return []models.GenericTestOverview{}, errGetTests
-	}
-
-	var modTest []models.GenericTestOverview
-
-	for i := range tests {
-		modTest = append(modTest, models.GenericTestOverview{ID: tests[i].ID, Name: tests[i].Name, Type: tests[i].Type})
-	}
-
-	return modTest, nil
-
-}

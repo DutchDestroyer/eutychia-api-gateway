@@ -5,48 +5,49 @@ type GenericTestDAO struct {
 	ID             string
 	Name           string
 	Type           string
+	Title          string
 	Description    string
 	DisplayAnswers bool
 	FinalRemark    string
-	Questions      []string
+	QuestionIDs    []string
 }
 
 var tests []GenericTestDAO = []GenericTestDAO{
 	{
-		"25553260-2ae4-465c-8a64-6a5c3ab355d0", "Test0", "generic", "This is test 0", false,
-		"Thanks for completing this test0", []string{},
+		"25553260-2ae4-465c-8a64-6a5c3ab355d0", "Test0", "generic", "Test 0", "This is test 0", false,
+		"Thanks for completing this test0", []string{"dc919c8d-93fa-4f69-8086-e2395b9d01e0", "dc919c8d-93fa-4f69-8086-e2395b9d01e1", "dc919c8d-93fa-4f69-8086-e2395b9d01e2"},
 	},
 	{
-		"25553260-2ae4-465c-8a64-6a5c3ab355d1", "Test1", "generic", "This is test 1", false,
-		"Thanks for completing this test1", []string{},
+		"25553260-2ae4-465c-8a64-6a5c3ab355d1", "Test1", "generic", "Test1", "This is test 1", false,
+		"Thanks for completing this test1", []string{"dc919c8d-93fa-4f69-8086-e2395b9d01e0", "dc919c8d-93fa-4f69-8086-e2395b9d01e1", "dc919c8d-93fa-4f69-8086-e2395b9d01e2"},
 	},
 	{
-		"25553260-2ae4-465c-8a64-6a5c3ab355d2", "Test2", "generic", "This is test 2", false,
-		"Thanks for completing this test2", []string{},
+		"25553260-2ae4-465c-8a64-6a5c3ab355d2", "Test2", "generic", "Test2", "This is test 2", false,
+		"Thanks for completing this test2", []string{"dc919c8d-93fa-4f69-8086-e2395b9d01e0", "dc919c8d-93fa-4f69-8086-e2395b9d01e1", "dc919c8d-93fa-4f69-8086-e2395b9d01e2"},
 	},
 	{
-		"25553260-2ae4-465c-8a64-6a5c3ab355d3", "Test3", "generic", "This is test 3", false,
-		"Thanks for completing this test3", []string{},
+		"25553260-2ae4-465c-8a64-6a5c3ab355d3", "Test3", "generic", "Test3", "This is test 3", false,
+		"Thanks for completing this test3", []string{"dc919c8d-93fa-4f69-8086-e2395b9d01e0", "dc919c8d-93fa-4f69-8086-e2395b9d01e1", "dc919c8d-93fa-4f69-8086-e2395b9d01e2"},
 	},
 	{
-		"25553260-2ae4-465c-8a64-6a5c3ab355d4", "Test4", "generic", "This is test 4", false,
-		"Thanks for completing this test4", []string{},
+		"25553260-2ae4-465c-8a64-6a5c3ab355d4", "Test4", "generic", "Test4", "This is test 4", false,
+		"Thanks for completing this test4", []string{"dc919c8d-93fa-4f69-8086-e2395b9d01e0", "dc919c8d-93fa-4f69-8086-e2395b9d01e1", "dc919c8d-93fa-4f69-8086-e2395b9d01e2"},
 	},
 	{
-		"25553260-2ae4-465c-8a64-6a5c3ab355d5", "Test5", "generic", "This is test 5", false,
-		"Thanks for completing this test5", []string{},
+		"25553260-2ae4-465c-8a64-6a5c3ab355d5", "Test5", "generic", "Test5", "This is test 5", false,
+		"Thanks for completing this test5", []string{"dc919c8d-93fa-4f69-8086-e2395b9d01e0", "dc919c8d-93fa-4f69-8086-e2395b9d01e1", "dc919c8d-93fa-4f69-8086-e2395b9d01e2"},
 	},
 	{
-		"25553260-2ae4-465c-8a64-6a5c3ab355d6", "Test6", "generic", "This is test 6", false,
-		"Thanks for completing this test6", []string{},
+		"25553260-2ae4-465c-8a64-6a5c3ab355d6", "Test6", "generic", "Test6", "This is test 6", false,
+		"Thanks for completing this test6", []string{"dc919c8d-93fa-4f69-8086-e2395b9d01e0", "dc919c8d-93fa-4f69-8086-e2395b9d01e1", "dc919c8d-93fa-4f69-8086-e2395b9d01e2"},
 	},
 	{
-		"25553260-2ae4-465c-8a64-6a5c3ab355d7", "Test7", "generic", "This is test 7", false,
-		"Thanks for completing this test7", []string{},
+		"25553260-2ae4-465c-8a64-6a5c3ab355d7", "Test7", "generic", "Test7", "This is test 7", false,
+		"Thanks for completing this test7", []string{"dc919c8d-93fa-4f69-8086-e2395b9d01e0", "dc919c8d-93fa-4f69-8086-e2395b9d01e1", "dc919c8d-93fa-4f69-8086-e2395b9d01e2"},
 	},
 	{
-		"25553260-2ae4-465c-8a64-6a5c3ab355d8", "Test8", "generic", "This is test 8", false,
-		"Thanks for completing this test8", []string{},
+		"25553260-2ae4-465c-8a64-6a5c3ab355d8", "Test8", "generic", "Test8", "This is test 8", false,
+		"Thanks for completing this test8", []string{"dc919c8d-93fa-4f69-8086-e2395b9d01e0", "dc919c8d-93fa-4f69-8086-e2395b9d01e1", "dc919c8d-93fa-4f69-8086-e2395b9d01e2"},
 	},
 }
 

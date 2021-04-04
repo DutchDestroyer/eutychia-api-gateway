@@ -6,3 +6,14 @@ type GenericTestOverview struct {
 	Name string
 	Type string
 }
+
+type GenericTestData struct {
+	ID             string
+	Name           string
+	Title          string
+	Type           string
+	Description    string
+	DisplayAnswers bool
+	FinalRemark    string
+	Questions      []GenericQuestion
+}

@@ -18,6 +18,7 @@ import (
 	"github.com/DutchDestroyer/eutychia-api-gateway/services"
 	"github.com/DutchDestroyer/eutychia-api-gateway/services/account"
 	"github.com/DutchDestroyer/eutychia-api-gateway/services/authentication"
+	gentest "github.com/DutchDestroyer/eutychia-api-gateway/services/gentest"
 	projects "github.com/DutchDestroyer/eutychia-api-gateway/services/project"
 )
 
@@ -122,31 +123,27 @@ func (s *DefaultApiService) GetGenericTestOfProject(ctx context.Context, project
 		return Response(http.StatusBadRequest, nil), errors.New("Incorrect data provided by client")
 	}
 
-	var genericTestQuestions = []GenericTestQuestions{
-		{
-			Question:     "What is your favorite food?",
-			QuestionType: "multipleChoice",
-			Answers:      []string{"Pizza", "Pasta", "Burger", "Steak", "Something else"},
-		},
-		{
-			Question:     "How are  you feeling today?",
-			QuestionType: "slider",
-			Answers:      []string{"very bad", "bad", "normal", "good", "awesome"},
-		},
-		{
-			Question:     "What is the best experience so far today?",
-			QuestionType: "openQuestion",
-			Answers:      nil,
-		},
+	test, err := gentest.GetTestData(projectID, testID)
+
+	if err != nil {
+		return Response(http.StatusInternalServerError, nil), err
 	}
 
-	return Response(http.StatusOK,
-		GenericTest{Title: "Title of generic test",
-			Description:    "Description of the test bla bla bla",
-			DisplayAnswers: true,
-			FinalRemark:    "This is the final remark, thanks for performing the test!",
-			Questions:      genericTestQuestions,
-		}), nil
+	var questions []GenericTestQuestions
+
+	for i := range test.Questions {
+		questions = append(questions, GenericTestQuestions{test.Questions[i].Question, test.Questions[i].QuestionType, test.Questions[i].Answers})
+	}
+
+	genericTest := GenericTest{
+		Title:          test.Title,
+		Description:    test.Description,
+		DisplayAnswers: test.DisplayAnswers,
+		FinalRemark:    test.FinalRemark,
+		Questions:      questions,
+	}
+
+	return Response(http.StatusOK, genericTest), nil
 }
 
 // GetProjectsOfAccount -
@@ -179,7 +176,7 @@ func (s *DefaultApiService) GetTestsToPerformByAccount(ctx context.Context, proj
 		return Response(http.StatusBadRequest, nil), errors.New("Incorrect data provided by client")
 	}
 
-	tests, errTests := projects.GetTestsOfProject(projectID)
+	tests, errTests := gentest.GetTestsOfProject(projectID)
 
 	if errTests != nil {
 		return Response(http.StatusInternalServerError, nil), errTests
