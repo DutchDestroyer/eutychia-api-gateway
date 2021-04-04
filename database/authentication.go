@@ -5,8 +5,8 @@ import (
 	"errors"
 )
 
-// AuthenticationData is the database model of the Authentication data
-type AuthenticationData struct {
+// AuthenticationDAO is the database model of the Authentication data
+type AuthenticationDAO struct {
 	AccountID       string
 	SessionID       string
 	AuthToken       string
@@ -15,11 +15,11 @@ type AuthenticationData struct {
 	RefreshTokenKey rsa.PublicKey
 }
 
-var authenticationTable []AuthenticationData
+var authenticationTable []AuthenticationDAO
 
 //StoreSession Stores the session in the database
 func StoreSession(accountID string, sessionID string, authToken string, authPK rsa.PublicKey, refreshToken string, refreshPK rsa.PublicKey) error {
-	authenticationTable = append(authenticationTable, AuthenticationData{accountID, sessionID, authToken, authPK, refreshToken, refreshPK})
+	authenticationTable = append(authenticationTable, AuthenticationDAO{accountID, sessionID, authToken, authPK, refreshToken, refreshPK})
 	return nil
 }
 
@@ -38,7 +38,7 @@ func UpdateSessionAuthToken(accountID string, sessionID string, authToken string
 }
 
 // GetSessionData retrieves a session from the database
-func GetSessionData(accountID string, sessionID string) (AuthenticationData, error) {
+func GetSessionData(accountID string, sessionID string) (AuthenticationDAO, error) {
 	err := errors.New("could not find session")
 
 	for i := range authenticationTable {
@@ -46,5 +46,5 @@ func GetSessionData(accountID string, sessionID string) (AuthenticationData, err
 			return authenticationTable[i], nil
 		}
 	}
-	return AuthenticationData{}, err
+	return AuthenticationDAO{}, err
 }
