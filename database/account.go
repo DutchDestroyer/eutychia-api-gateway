@@ -8,13 +8,17 @@ type AccountDAO struct {
 	Username              string
 	Password              string
 	AccountType           string
-	ProjectsAsResearcher  []string
-	ProjectsAsParticipant []string
+	ProjectsAsResearcher  []string // Only the IDs are stored here
+	ProjectsAsParticipant []string // Only the IDs are stored here
 }
 
 var accountDatabase []AccountDAO = []AccountDAO{
-	{"683c5de1-5172-4a94-bd3b-2d4bf58b6b72", "mark.wijnbergen@hey.com", "test123", "researcher", []string{}, []string{}},
-	{"683c5de1-5172-4a94-bd3b-2d4bf58b6b73", "wijnbergenmark@gmail.com", "test123", "participant", []string{}, []string{}},
+	{"683c5de1-5172-4a94-bd3b-2d4bf58b6b72", "mark.wijnbergen@hey.com", "test123", "researcher",
+		[]string{"497aeeaf-0d41-46c4-a5a1-8a88c7b61807", "497aeeaf-0d41-46c4-a5a1-8a88c7b61808", "497aeeaf-0d41-46c4-a5a1-8a88c7b61809"},
+		[]string{"497aeeaf-0d41-46c4-a5a1-8a88c7b61807", "497aeeaf-0d41-46c4-a5a1-8a88c7b61808", "497aeeaf-0d41-46c4-a5a1-8a88c7b61809"}},
+	{"683c5de1-5172-4a94-bd3b-2d4bf58b6b73", "wijnbergenmark@gmail.com", "test123", "participant",
+		[]string{},
+		[]string{"497aeeaf-0d41-46c4-a5a1-8a88c7b61807", "497aeeaf-0d41-46c4-a5a1-8a88c7b61808"}},
 }
 
 // CreateDatabaseEntry creates a new entry in the database

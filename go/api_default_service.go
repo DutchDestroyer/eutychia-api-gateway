@@ -18,7 +18,7 @@ import (
 	"github.com/DutchDestroyer/eutychia-api-gateway/services"
 	"github.com/DutchDestroyer/eutychia-api-gateway/services/account"
 	"github.com/DutchDestroyer/eutychia-api-gateway/services/authentication"
-	"github.com/DutchDestroyer/eutychia-api-gateway/services/projects"
+	projects "github.com/DutchDestroyer/eutychia-api-gateway/services/project"
 )
 
 // DefaultApiService is a service that implents the logic for the DefaultApiServicer
@@ -174,28 +174,21 @@ func (s *DefaultApiService) GetProjectsOfAccount(ctx context.Context, accountID 
 
 // GetTestsToPerformByAccount -
 func (s *DefaultApiService) GetTestsToPerformByAccount(ctx context.Context, projectID string, accountID string) (ImplResponse, error) {
-	// TODO - update GetTestsToPerformByAccount with the required logic for this service method.
 
 	if !services.IsCorrectUUID(projectID) || !services.IsCorrectUUID(accountID) {
 		return Response(http.StatusBadRequest, nil), errors.New("Incorrect data provided by client")
 	}
 
-	var testProjects = []Test{
-		{
-			TestID:   "7b43fcf0-be12-4f91-8baa-fcdcac8118d5",
-			TestName: "Test 1",
-			TestType: "generic",
-		},
-		{
-			TestID:   "7b43fcf0-be12-4f91-8baa-fcdcac8118d5",
-			TestName: "Test 2",
-			TestType: "generic",
-		},
-		{
-			TestID:   "",
-			TestName: "Incorrect, should throw error",
-			TestType: "generic",
-		},
+	tests, errTests := projects.GetTestsOfProject(projectID)
+
+	if errTests != nil {
+		return Response(http.StatusInternalServerError, nil), errTests
+	}
+
+	var testProjects []Test
+
+	for i := range tests {
+		testProjects = append(testProjects, Test{tests[i].ID, tests[i].Name, tests[i].Type})
 	}
 
 	return Response(http.StatusOK, TestsProject{TestsToPerform: testProjects}), nil

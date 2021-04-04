@@ -22,7 +22,7 @@ func GetProjectsAsParticipantForAccount(accountID string) ([]models.Project, err
 	var projectsToReturn []models.Project
 
 	for i := range projects {
-		projectsToReturn = append(projectsToReturn, models.Project{projects[i].ID, projects[i].Name})
+		projectsToReturn = append(projectsToReturn, models.Project{ID: projects[i].ID, Name: projects[i].Name})
 	}
 
 	return projectsToReturn, nil
@@ -30,5 +30,35 @@ func GetProjectsAsParticipantForAccount(accountID string) ([]models.Project, err
 
 //GetProjectsAsResearcherForAccount gets all the projects of the specific accountID where this account is a researcher
 func GetProjectsAsResearcherForAccount(accountID string) {
+
+}
+
+// GetTestsOfProject gets all the tests of a project
+func GetTestsOfProject(projectID string) ([]models.GenericTestOverview, error) {
+	projects, errGetProjects := database.GetProjects([]string{projectID})
+
+	if errGetProjects != nil {
+		return []models.GenericTestOverview{}, errGetProjects
+	}
+
+	var testIDs []string
+
+	for i := range projects {
+		testIDs = append(testIDs, projects[i].TestIDs...)
+	}
+
+	tests, errGetTests := database.GetTestsOfIDs(testIDs)
+
+	if errGetTests != nil {
+		return []models.GenericTestOverview{}, errGetTests
+	}
+
+	var modTest []models.GenericTestOverview
+
+	for i := range tests {
+		modTest = append(modTest, models.GenericTestOverview{ID: tests[i].ID, Name: tests[i].Name, Type: tests[i].Type})
+	}
+
+	return modTest, nil
 
 }
