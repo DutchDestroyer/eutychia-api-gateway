@@ -17,3 +17,9 @@ type GenericTestData struct {
 	FinalRemark    string
 	Questions      []GenericQuestion
 }
+
+type SubmittedAnswers struct {
+	QuestionNumber int32
+	Answer         string
+	TimeToAnswer   float32
+}

@@ -15,6 +15,7 @@ import (
 	"errors"
 	"net/http"
 
+	"github.com/DutchDestroyer/eutychia-api-gateway/models"
 	"github.com/DutchDestroyer/eutychia-api-gateway/services"
 	"github.com/DutchDestroyer/eutychia-api-gateway/services/account"
 	"github.com/DutchDestroyer/eutychia-api-gateway/services/authentication"
@@ -288,6 +289,31 @@ func (s *DefaultApiService) SendEmailForSignUp(ctx context.Context, signUp SignU
 // SubmitAnswerToTest -
 func (s *DefaultApiService) SubmitAnswerToTest(ctx context.Context, projectID string, testID string, genericTestAnswers GenericTestAnswers) (ImplResponse, error) {
 	// TODO - update SubmitAnswerToTest with the required logic for this service method.
+
+	if !services.IsCorrectUUID(projectID) || !services.IsCorrectUUID(testID) || !services.IsCorrectUUID(genericTestAnswers.AccountID) {
+		return Response(http.StatusBadRequest, nil), errors.New("Incorrect data provided by client")
+	}
+
+	if len(genericTestAnswers.Answers) < 1 {
+		return Response(http.StatusBadRequest, nil), errors.New("No answers provided")
+	}
+
+	var submittedAnswers []models.SubmittedAnswers
+
+	for i := range genericTestAnswers.Answers {
+		submittedAnswers = append(submittedAnswers,
+			models.SubmittedAnswers{
+				QuestionNumber: genericTestAnswers.Answers[i].Question,
+				Answer:         genericTestAnswers.Answers[i].Answer,
+				TimeToAnswer:   genericTestAnswers.Answers[i].TimeToAnswer,
+			})
+	}
+
+	err := projects.StoreTestAnswers(projectID, testID, genericTestAnswers.AccountID, submittedAnswers)
+
+	if err != nil {
+		return Response(http.StatusInternalServerError, nil), nil
+	}
 
 	return Response(http.StatusOK, nil), nil
 }
