@@ -1,5 +1,7 @@
 package database
 
+import "github.com/DutchDestroyer/eutychia-api-gateway/models"
+
 //GenericTestDAO data model for the database
 type GenericTestDAO struct {
 	ID             string
@@ -12,7 +14,7 @@ type GenericTestDAO struct {
 	QuestionIDs    []string
 }
 
-var tests []GenericTestDAO = []GenericTestDAO{
+var genericTests []GenericTestDAO = []GenericTestDAO{
 	{
 		"25553260-2ae4-465c-8a64-6a5c3ab355d0", "Test0", "generic", "Test 0", "This is test 0", false,
 		"Thanks for completing this test0", []string{"dc919c8d-93fa-4f69-8086-e2395b9d01e0", "dc919c8d-93fa-4f69-8086-e2395b9d01e1", "dc919c8d-93fa-4f69-8086-e2395b9d01e2"},
@@ -55,13 +57,27 @@ var tests []GenericTestDAO = []GenericTestDAO{
 func GetTestsOfIDs(testIDs []string) ([]GenericTestDAO, error) {
 	var testsToReturn []GenericTestDAO
 
-	for i := range tests {
+	for i := range genericTests {
 		for j := range testIDs {
-			if tests[i].ID == testIDs[j] {
-				testsToReturn = append(testsToReturn, tests[i])
+			if genericTests[i].ID == testIDs[j] {
+				testsToReturn = append(testsToReturn, genericTests[i])
 			}
 		}
 	}
 
 	return testsToReturn, nil
+}
+
+// GetAllGenericTests gets all generic tests that are in the database
+func GetAllGenericTests() ([]models.GenericTestOverview, error) {
+	var tests []models.GenericTestOverview
+
+	for i := range genericTests {
+		tests = append(tests, models.GenericTestOverview{
+			ID:   genericTests[i].ID,
+			Name: genericTests[i].Name,
+			Type: genericTests[i].Type})
+	}
+
+	return tests, nil
 }

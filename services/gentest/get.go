@@ -8,6 +8,11 @@ import (
 	"github.com/DutchDestroyer/eutychia-api-gateway/models"
 )
 
+// GetAllGenericTests gets all generic tests that are in the database
+func GetAllGenericTests() ([]models.GenericTestOverview, error) {
+	return database.GetAllGenericTests()
+}
+
 // GetTestsOfProject gets all the tests of a project
 func GetTestsOfProject(projectID string) ([]models.GenericTestOverview, error) {
 	projects, errGetProjects := database.GetProjects([]string{projectID})

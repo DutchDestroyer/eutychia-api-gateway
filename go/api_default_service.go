@@ -17,7 +17,7 @@ import (
 
 	"github.com/DutchDestroyer/eutychia-api-gateway/models"
 	"github.com/DutchDestroyer/eutychia-api-gateway/services"
-	"github.com/DutchDestroyer/eutychia-api-gateway/services/account"
+	account "github.com/DutchDestroyer/eutychia-api-gateway/services/account"
 	"github.com/DutchDestroyer/eutychia-api-gateway/services/authentication"
 	gentest "github.com/DutchDestroyer/eutychia-api-gateway/services/gentest"
 	projects "github.com/DutchDestroyer/eutychia-api-gateway/services/project"
@@ -40,19 +40,26 @@ func (s *DefaultApiService) GetAllTests(ctx context.Context, accountID string) (
 		return Response(http.StatusBadRequest, nil), errors.New("Incorrect data provided by client")
 	}
 
-	var allTests = []TestsForAccount{
-		{
-			TestID:   "7b43fcf0-be12-4f91-8baa-fcdcac8118d5",
-			TestName: "test 1",
-		},
-		{
-			TestID:   "7b43fcf0-be12-4f91-8baa-fcdcac8118d6",
-			TestName: "test 2",
-		},
-		{
-			TestID:   "7b43fcf0-be12-4f91-8baa-fcdcac8118d7",
-			TestName: "test 3",
-		},
+	isResearcher, err1 := account.IsResearcherAccount(accountID) 
+
+	if err1 != nil {
+		return Response(http.StatusInternalServerError, nil), err1
+	}
+
+	if !isResearcher {
+		return Response(http.StatusForbidden, nil), errors.New("account doesn't have right permissions")
+	}
+
+	genericTests, err2 := gentest.GetAllGenericTests()
+
+	if err2 != nil {
+		return Response(http.StatusInternalServerError, nil), err2
+	}
+
+	var allTests []TestsForAccount
+
+	for i := range genericTests {
+		allTests = append(allTests, TestsForAccount{TestID: genericTests[i].ID, TestName: genericTests[i].Name})
 	}
 
 	return Response(http.StatusOK, allTests), nil
