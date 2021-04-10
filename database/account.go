@@ -1,10 +1,16 @@
 package database
 
-import "errors"
+import (
+	"errors"
+
+	"github.com/google/uuid"
+)
 
 // AccountDAO data stored in the db
 type AccountDAO struct {
 	AccountID             string
+	FirstName             string
+	LastName              string
 	Username              string
 	Password              string
 	AccountType           string
@@ -13,18 +19,28 @@ type AccountDAO struct {
 }
 
 var accountDatabase []AccountDAO = []AccountDAO{
-	{"683c5de1-5172-4a94-bd3b-2d4bf58b6b72", "mark.wijnbergen@hey.com", "test123", "researcher",
+	{"683c5de1-5172-4a94-bd3b-2d4bf58b6b72", "Mark1", "Wijnbergen1", "mark.wijnbergen@hey.com", "test123", "researcher",
 		[]string{"497aeeaf-0d41-46c4-a5a1-8a88c7b61807", "497aeeaf-0d41-46c4-a5a1-8a88c7b61808", "497aeeaf-0d41-46c4-a5a1-8a88c7b61809"},
 		[]string{"497aeeaf-0d41-46c4-a5a1-8a88c7b61807", "497aeeaf-0d41-46c4-a5a1-8a88c7b61808", "497aeeaf-0d41-46c4-a5a1-8a88c7b61809"}},
-	{"683c5de1-5172-4a94-bd3b-2d4bf58b6b73", "wijnbergenmark@gmail.com", "test123", "participant",
+	{"683c5de1-5172-4a94-bd3b-2d4bf58b6b73", "Mark2", "Wijnbergen2", "wijnbergenmark@gmail.com", "test123", "participant",
 		[]string{},
-		[]string{"497aeeaf-0d41-46c4-a5a1-8a88c7b61807", "497aeeaf-0d41-46c4-a5a1-8a88c7b61808"}},
+		[]string{"497aeeaf-0d41-46c4-a5a1-8a88c7b61807", "497aeeaf-0d41-46c4-a5a1-8a88c7b61808"},
+	},
 }
 
-// CreateDatabaseEntry creates a new entry in the database
-func CreateDatabaseEntry(accountID string, username string, password string, accountType string) {
-	accountDatabase = append(accountDatabase, AccountDAO{accountID, username, password, accountType, []string{}, []string{}})
+// CreateInitialParticipantAccount creates the participant when the participant is for the first time added
+// by a researcher for a project. This participant hasn't confirmed it's account yet, so has no password
+func CreateInitialParticipantAccount(firstName string, lastName string, emailAddress string) (string, error) {
+	accountID := uuid.New().String()
+
+	accountDatabase = append(accountDatabase, AccountDAO{
+		accountID, firstName, lastName, emailAddress, "", "participant", []string{}, []string{},
+	})
+
+	return accountID, nil
 }
+
+// FinalizeAccount
 
 // GetDatabaseEntry gets an entry from the database
 func GetDatabaseEntry(accountID string) (AccountDAO, error) {

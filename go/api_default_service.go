@@ -40,7 +40,7 @@ func (s *DefaultApiService) GetAllTests(ctx context.Context, accountID string) (
 		return Response(http.StatusBadRequest, nil), errors.New("Incorrect data provided by client")
 	}
 
-	isResearcher, err1 := account.IsResearcherAccount(accountID) 
+	isResearcher, err1 := account.IsResearcherAccount(accountID)
 
 	if err1 != nil {
 		return Response(http.StatusInternalServerError, nil), err1
@@ -71,8 +71,34 @@ func (s *DefaultApiService) CreatesNewProject(ctx context.Context, accountID str
 	if !services.IsCorrectUUID(accountID) {
 		return Response(http.StatusBadRequest, nil), errors.New("Incorrect data provided by client")
 	}
-	//TODO: Uncomment the next line to return response Response(200, {}) or use other options such as http.Ok ...
-	//return Response(200, nil),nil
+
+	isResearcher, err1 := account.IsResearcherAccount(accountID)
+
+	if err1 != nil {
+		return Response(http.StatusInternalServerError, nil), err1
+	}
+
+	if !isResearcher {
+		return Response(http.StatusForbidden, nil), errors.New("account doesn't have right permissions")
+	}
+
+	var participants []models.Participant
+
+	for i := range createProject.Participants {
+		participants = append(participants,
+			models.Participant{
+				FirstName:    createProject.Participants[i].Firstame,
+				LastName:     createProject.Participants[i].Lastname,
+				EmailAddress: createProject.Participants[i].EmailAddress,
+				AccountID:    "",
+			})
+	}
+
+	err2 := projects.AddNewProject(createProject.ProjectTitle, createProject.Tests, accountID, participants)
+
+	if err2 != nil {
+		return Response(http.StatusInternalServerError, nil), err2
+	}
 
 	return Response(http.StatusOK, nil), nil
 }

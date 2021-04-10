@@ -1,5 +1,7 @@
 package database
 
+import "github.com/google/uuid"
+
 // ProjectDAO contains all informations of the different projects
 type ProjectDAO struct {
 	ID           string
@@ -22,8 +24,15 @@ var projects []ProjectDAO = []ProjectDAO{
 }
 
 //AddNewProject adds a new project to the database
-func AddNewProject(projectName string, tests []string, researchers []string, participants []string) {
+func AddNewProject(projectName string, tests []string, researchers []string, participants []string) error {
 
+	projectID := uuid.New()
+
+	projects = append(projects, ProjectDAO{
+		projectID.String(), projectName, researchers, participants, tests,
+	})
+
+	return nil
 }
 
 //GetProjects gets all the projects with the specific IDs
