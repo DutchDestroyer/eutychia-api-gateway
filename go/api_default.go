@@ -24,18 +24,12 @@ type DefaultApiController struct {
 
 // NewDefaultApiController creates a default api controller
 func NewDefaultApiController(s DefaultApiServicer) Router {
-	return &DefaultApiController{service: s}
+	return &DefaultApiController{ service: s }
 }
 
 // Routes returns all of the api route for the DefaultApiController
 func (c *DefaultApiController) Routes() Routes {
-	return append(Routes{
-		{
-			"CreateNewAccount",
-			strings.ToUpper("Post"),
-			"/api/signup/create",
-			c.CreateNewAccount,
-		},
+	return append(Routes{ 
 		{
 			"CreatesNewProject",
 			strings.ToUpper("Post"),
@@ -47,6 +41,12 @@ func (c *DefaultApiController) Routes() Routes {
 			strings.ToUpper("Delete"),
 			"/api/accounts/{accountID}",
 			c.DeleteAccountByID,
+		},
+		{
+			"FinalizeAccountCreation",
+			strings.ToUpper("Post"),
+			"/api/accounts/{accountID}/finalize",
+			c.FinalizeAccountCreation,
 		},
 		{
 			"GetAccountByID",
@@ -97,82 +97,57 @@ func (c *DefaultApiController) Routes() Routes {
 			c.RefreshAccessToken,
 		},
 		{
-			"SendEmailForSignUp",
-			strings.ToUpper("Post"),
-			"/api/signup",
-			c.SendEmailForSignUp,
-		},
-		{
 			"SubmitAnswerToTest",
 			strings.ToUpper("Post"),
 			"/api/projects/{projectID}/genericTests/{testID}",
 			c.SubmitAnswerToTest,
 		},
-	}, c.optionRoutes()...)
-}
-
-func (c *DefaultApiController) optionRoutes() Routes {
-	return Routes{
-		{
-			"CreatesNewProject",
-			strings.ToUpper("Options"),
-			"/api/accounts/{accountID}/projects",
-			c.CreatesNewProject,
-		},
-		{
-			"LogInWithAccount",
-			strings.ToUpper("Options"),
-			"/api/authentication/login",
-			c.LogInWithAccount,
-		},
-		{
-			"SubmitAnswerToTest",
-			strings.ToUpper("Options"),
-			"/api/projects/{projectID}/genericTests/{testID}",
-			c.SubmitAnswerToTest,
-		},
-		{
-			"GetProjectsOfAccount",
-			strings.ToUpper("Options"),
-			"/api/accounts/{accountID}/projects",
-			c.GetProjectsOfAccount,
-		},
-		{
-			"GetTestsToPerformByAccount",
-			strings.ToUpper("Options"),
-			"/api/projects/{projectID}/{accountID}/tests",
-			c.GetTestsToPerformByAccount,
-		},
-		{
-			"GetAllTests",
-			strings.ToUpper("Options"),
-			"/api/test/{accountID}",
-			c.GetAllTests,
-		},
-	}
-}
-
-// CreateNewAccount -
-func (c *DefaultApiController) CreateNewAccount(w http.ResponseWriter, r *http.Request) {
-	accountCreation := &AccountCreation{}
-	if err := json.NewDecoder(r.Body).Decode(&accountCreation); err != nil {
-		w.WriteHeader(500)
-		return
+		}, c.optionRoutes()...)
 	}
 
-	result, err := c.service.CreateNewAccount(r.Context(), *accountCreation)
-	//If an error occured, encode the error with the status code
-	if err != nil {
-		EncodeJSONResponse(err.Error(), &result.Code, w)
-		return
+	func (c *DefaultApiController) optionRoutes() Routes {
+		return Routes{
+			{
+				"CreatesNewProject",
+				strings.ToUpper("Options"),
+				"/api/accounts/{accountID}/projects",
+				c.CreatesNewProject,
+			},
+			{
+				"LogInWithAccount",
+				strings.ToUpper("Options"),
+				"/api/authentication/login",
+				c.LogInWithAccount,
+			},
+			{
+				"SubmitAnswerToTest",
+				strings.ToUpper("Options"),
+				"/api/projects/{projectID}/genericTests/{testID}",
+				c.SubmitAnswerToTest,
+			},
+			{
+				"GetProjectsOfAccount",
+				strings.ToUpper("Options"),
+				"/api/accounts/{accountID}/projects",
+				c.GetProjectsOfAccount,
+			},
+			{
+				"GetTestsToPerformByAccount",
+				strings.ToUpper("Options"),
+				"/api/projects/{projectID}/{accountID}/tests",
+				c.GetTestsToPerformByAccount,
+			},
+			{
+				"GetAllTests",
+				strings.ToUpper("Options"),
+				"/api/test/{accountID}",
+				c.GetAllTests,
+			},
+		}
 	}
-	//If no error, encode the body and the result code
-	EncodeJSONResponse(result.Body, &result.Code, w)
 
-}
-
-// CreatesNewProject -
-func (c *DefaultApiController) CreatesNewProject(w http.ResponseWriter, r *http.Request) {
+// CreatesNewProject - 
+func (c *DefaultApiController) CreatesNewProject(w http.ResponseWriter, r *http.Request) { 
 	params := mux.Vars(r)
 	accountID := params["accountID"]
 	createProject := &CreateProject{}
@@ -180,7 +155,7 @@ func (c *DefaultApiController) CreatesNewProject(w http.ResponseWriter, r *http.
 		w.WriteHeader(500)
 		return
 	}
-
+	
 	result, err := c.service.CreatesNewProject(r.Context(), accountID, *createProject)
 	//If an error occured, encode the error with the status code
 	if err != nil {
@@ -189,11 +164,11 @@ func (c *DefaultApiController) CreatesNewProject(w http.ResponseWriter, r *http.
 	}
 	//If no error, encode the body and the result code
 	EncodeJSONResponse(result.Body, &result.Code, w)
-
+	
 }
 
-// DeleteAccountByID -
-func (c *DefaultApiController) DeleteAccountByID(w http.ResponseWriter, r *http.Request) {
+// DeleteAccountByID - 
+func (c *DefaultApiController) DeleteAccountByID(w http.ResponseWriter, r *http.Request) { 
 	params := mux.Vars(r)
 	accountID := params["accountID"]
 	result, err := c.service.DeleteAccountByID(r.Context(), accountID)
@@ -204,11 +179,32 @@ func (c *DefaultApiController) DeleteAccountByID(w http.ResponseWriter, r *http.
 	}
 	//If no error, encode the body and the result code
 	EncodeJSONResponse(result.Body, &result.Code, w)
-
+	
 }
 
-// GetAccountByID -
-func (c *DefaultApiController) GetAccountByID(w http.ResponseWriter, r *http.Request) {
+// FinalizeAccountCreation - 
+func (c *DefaultApiController) FinalizeAccountCreation(w http.ResponseWriter, r *http.Request) { 
+	params := mux.Vars(r)
+	accountID := params["accountID"]
+	accountCreationFinalize := &AccountCreationFinalize{}
+	if err := json.NewDecoder(r.Body).Decode(&accountCreationFinalize); err != nil {
+		w.WriteHeader(500)
+		return
+	}
+	
+	result, err := c.service.FinalizeAccountCreation(r.Context(), accountID, *accountCreationFinalize)
+	//If an error occured, encode the error with the status code
+	if err != nil {
+		EncodeJSONResponse(err.Error(), &result.Code, w)
+		return
+	}
+	//If no error, encode the body and the result code
+	EncodeJSONResponse(result.Body, &result.Code, w)
+	
+}
+
+// GetAccountByID - 
+func (c *DefaultApiController) GetAccountByID(w http.ResponseWriter, r *http.Request) { 
 	params := mux.Vars(r)
 	accountID := params["accountID"]
 	result, err := c.service.GetAccountByID(r.Context(), accountID)
@@ -219,11 +215,11 @@ func (c *DefaultApiController) GetAccountByID(w http.ResponseWriter, r *http.Req
 	}
 	//If no error, encode the body and the result code
 	EncodeJSONResponse(result.Body, &result.Code, w)
-
+	
 }
 
-// GetAllTests -
-func (c *DefaultApiController) GetAllTests(w http.ResponseWriter, r *http.Request) {
+// GetAllTests - 
+func (c *DefaultApiController) GetAllTests(w http.ResponseWriter, r *http.Request) { 
 	params := mux.Vars(r)
 	accountID := params["accountID"]
 	result, err := c.service.GetAllTests(r.Context(), accountID)
@@ -234,11 +230,11 @@ func (c *DefaultApiController) GetAllTests(w http.ResponseWriter, r *http.Reques
 	}
 	//If no error, encode the body and the result code
 	EncodeJSONResponse(result.Body, &result.Code, w)
-
+	
 }
 
-// GetGenericTestOfProject -
-func (c *DefaultApiController) GetGenericTestOfProject(w http.ResponseWriter, r *http.Request) {
+// GetGenericTestOfProject - 
+func (c *DefaultApiController) GetGenericTestOfProject(w http.ResponseWriter, r *http.Request) { 
 	params := mux.Vars(r)
 	projectID := params["projectID"]
 	testID := params["testID"]
@@ -250,11 +246,11 @@ func (c *DefaultApiController) GetGenericTestOfProject(w http.ResponseWriter, r 
 	}
 	//If no error, encode the body and the result code
 	EncodeJSONResponse(result.Body, &result.Code, w)
-
+	
 }
 
-// GetProjectsOfAccount -
-func (c *DefaultApiController) GetProjectsOfAccount(w http.ResponseWriter, r *http.Request) {
+// GetProjectsOfAccount - 
+func (c *DefaultApiController) GetProjectsOfAccount(w http.ResponseWriter, r *http.Request) { 
 	params := mux.Vars(r)
 	accountID := params["accountID"]
 	result, err := c.service.GetProjectsOfAccount(r.Context(), accountID)
@@ -265,11 +261,11 @@ func (c *DefaultApiController) GetProjectsOfAccount(w http.ResponseWriter, r *ht
 	}
 	//If no error, encode the body and the result code
 	EncodeJSONResponse(result.Body, &result.Code, w)
-
+	
 }
 
-// GetTestsToPerformByAccount -
-func (c *DefaultApiController) GetTestsToPerformByAccount(w http.ResponseWriter, r *http.Request) {
+// GetTestsToPerformByAccount - 
+func (c *DefaultApiController) GetTestsToPerformByAccount(w http.ResponseWriter, r *http.Request) { 
 	params := mux.Vars(r)
 	projectID := params["projectID"]
 	accountID := params["accountID"]
@@ -281,17 +277,17 @@ func (c *DefaultApiController) GetTestsToPerformByAccount(w http.ResponseWriter,
 	}
 	//If no error, encode the body and the result code
 	EncodeJSONResponse(result.Body, &result.Code, w)
-
+	
 }
 
-// LogInWithAccount -
-func (c *DefaultApiController) LogInWithAccount(w http.ResponseWriter, r *http.Request) {
+// LogInWithAccount - 
+func (c *DefaultApiController) LogInWithAccount(w http.ResponseWriter, r *http.Request) { 
 	loginAccount := &LoginAccount{}
 	if err := json.NewDecoder(r.Body).Decode(&loginAccount); err != nil {
 		w.WriteHeader(500)
 		return
 	}
-
+	
 	result, err := c.service.LogInWithAccount(r.Context(), *loginAccount)
 	//If an error occured, encode the error with the status code
 	if err != nil {
@@ -300,17 +296,17 @@ func (c *DefaultApiController) LogInWithAccount(w http.ResponseWriter, r *http.R
 	}
 	//If no error, encode the body and the result code
 	EncodeJSONResponse(result.Body, &result.Code, w)
-
+	
 }
 
-// LogOutWithAccount -
-func (c *DefaultApiController) LogOutWithAccount(w http.ResponseWriter, r *http.Request) {
+// LogOutWithAccount - 
+func (c *DefaultApiController) LogOutWithAccount(w http.ResponseWriter, r *http.Request) { 
 	logoutAccount := &LogoutAccount{}
 	if err := json.NewDecoder(r.Body).Decode(&logoutAccount); err != nil {
 		w.WriteHeader(500)
 		return
 	}
-
+	
 	result, err := c.service.LogOutWithAccount(r.Context(), *logoutAccount)
 	//If an error occured, encode the error with the status code
 	if err != nil {
@@ -319,17 +315,17 @@ func (c *DefaultApiController) LogOutWithAccount(w http.ResponseWriter, r *http.
 	}
 	//If no error, encode the body and the result code
 	EncodeJSONResponse(result.Body, &result.Code, w)
-
+	
 }
 
-// RefreshAccessToken -
-func (c *DefaultApiController) RefreshAccessToken(w http.ResponseWriter, r *http.Request) {
+// RefreshAccessToken - 
+func (c *DefaultApiController) RefreshAccessToken(w http.ResponseWriter, r *http.Request) { 
 	refreshDetails := &RefreshDetails{}
 	if err := json.NewDecoder(r.Body).Decode(&refreshDetails); err != nil {
 		w.WriteHeader(500)
 		return
 	}
-
+	
 	result, err := c.service.RefreshAccessToken(r.Context(), *refreshDetails)
 	//If an error occured, encode the error with the status code
 	if err != nil {
@@ -338,30 +334,11 @@ func (c *DefaultApiController) RefreshAccessToken(w http.ResponseWriter, r *http
 	}
 	//If no error, encode the body and the result code
 	EncodeJSONResponse(result.Body, &result.Code, w)
-
+	
 }
 
-// SendEmailForSignUp -
-func (c *DefaultApiController) SendEmailForSignUp(w http.ResponseWriter, r *http.Request) {
-	signUp := &SignUp{}
-	if err := json.NewDecoder(r.Body).Decode(&signUp); err != nil {
-		w.WriteHeader(500)
-		return
-	}
-
-	result, err := c.service.SendEmailForSignUp(r.Context(), *signUp)
-	//If an error occured, encode the error with the status code
-	if err != nil {
-		EncodeJSONResponse(err.Error(), &result.Code, w)
-		return
-	}
-	//If no error, encode the body and the result code
-	EncodeJSONResponse(result.Body, &result.Code, w)
-
-}
-
-// SubmitAnswerToTest -
-func (c *DefaultApiController) SubmitAnswerToTest(w http.ResponseWriter, r *http.Request) {
+// SubmitAnswerToTest - 
+func (c *DefaultApiController) SubmitAnswerToTest(w http.ResponseWriter, r *http.Request) { 
 	params := mux.Vars(r)
 	projectID := params["projectID"]
 	testID := params["testID"]
@@ -370,7 +347,7 @@ func (c *DefaultApiController) SubmitAnswerToTest(w http.ResponseWriter, r *http
 		w.WriteHeader(500)
 		return
 	}
-
+	
 	result, err := c.service.SubmitAnswerToTest(r.Context(), projectID, testID, *genericTestAnswers)
 	//If an error occured, encode the error with the status code
 	if err != nil {
@@ -379,5 +356,5 @@ func (c *DefaultApiController) SubmitAnswerToTest(w http.ResponseWriter, r *http
 	}
 	//If no error, encode the body and the result code
 	EncodeJSONResponse(result.Body, &result.Code, w)
-
+	
 }

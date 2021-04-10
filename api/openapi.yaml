@@ -69,6 +69,60 @@ paths:
           description: Account not found
       security:
       - ApiKeyAuth: []
+  /accounts/{accountID}/finalize:
+    post:
+      description: finalize the account creation when user is added, this happens
+        when email is senderAccountID
+      operationId: FinalizeAccountCreation
+      parameters:
+      - description: The ID of the account
+        explode: false
+        in: path
+        name: accountID
+        required: true
+        schema:
+          description: the schema to fetch the projects of a specific account
+          example: 0a8ba9ad-a93d-4991-8c23-c178b09fe6a1
+          pattern: ^[0-9a-f]{8}-[0-9a-f]{4}-[1-5][0-9a-f]{3}-[89ab][0-9a-f]{3}-[0-9a-f]{12}$
+          title: schema_projects_account_id
+          type: string
+        style: simple
+      requestBody:
+        $ref: '#/components/requestBodies/account_creation_finalize'
+        content:
+          application/json:
+            example:
+              emailAddress: markwijnbergen@hey.com
+              firstName: mark
+              lastName: Wijnbergen
+              password: password123
+            schema:
+              properties:
+                emailAddress:
+                  description: email address of the participant
+                  type: string
+                firstName:
+                  description: first name of the user
+                  type: string
+                lastName:
+                  description: last name of the user
+                  type: string
+                password:
+                  description: password of the user
+                  type: string
+              required:
+              - emailAddress
+              - firstName
+              - lastName
+              - password
+              title: account_creation_finalize
+              type: object
+        required: true
+      responses:
+        "200":
+          description: OK
+        "400":
+          description: The specified account ID or email address is invalid
   /accounts/{accountID}/projects:
     get:
       description: returns all projects where this account is involved in
@@ -498,96 +552,6 @@ paths:
           description: Account not found
       security:
       - ApiKeyAuth: []
-  /signup:
-    post:
-      description: Sends an email address that needs to be signed up
-      operationId: SendEmailForSignUp
-      requestBody:
-        $ref: '#/components/requestBodies/sign_up'
-        content:
-          application/json:
-            example:
-              senderAccountID: 0a8ba9ad-a93d-4991-8c23-c178b09fe6a2
-              emailAddress: markwijnbergen@heycom
-            schema:
-              description: schema for signing up
-              properties:
-                senderAccountID:
-                  description: account id of the account that invites the new user
-                  pattern: ^[0-9a-f]{8}-[0-9a-f]{4}-[1-5][0-9a-f]{3}-[89ab][0-9a-f]{3}-[0-9a-f]{12}$
-                  title: sender account id
-                  type: string
-                emailAddress:
-                  description: the email address of the newly invited person
-                  title: emailAddress
-                  type: string
-              required:
-              - emailAddress
-              - senderAccountID
-              title: sign up
-              type: object
-        required: true
-      responses:
-        "200":
-          description: OK
-        "400":
-          description: The specified account ID or email address is invalid
-        "401":
-          description: Authentication failed
-        "404":
-          description: Account not found
-      security:
-      - ApiKeyAuth: []
-  /signup/create:
-    post:
-      description: Creates a new account
-      operationId: CreateNewAccount
-      requestBody:
-        $ref: '#/components/requestBodies/account_creation'
-        content:
-          application/json:
-            example:
-              firstName: Mark
-              lastName: Wijnbergen
-              emailAddress: markwijnbergen@hey.com
-              senderAccountID: 0a8ba9ad-a93d-4991-8c23-c178b09fe6a2
-            schema:
-              description: the schema to create the new account
-              properties:
-                firstName:
-                  description: first name of the new user
-                  title: first name
-                  type: string
-                lastName:
-                  description: last name of the new user
-                  title: last name
-                  type: string
-                senderAccountID:
-                  description: the id of the account that invited the new user
-                  pattern: ^[0-9a-f]{8}-[0-9a-f]{4}-[1-5][0-9a-f]{3}-[89ab][0-9a-f]{3}-[0-9a-f]{12}$
-                  title: sender account id
-                  type: string
-                emailAddress:
-                  type: string
-              required:
-              - emailAddress
-              - firstName
-              - lastName
-              - senderAccountID
-              title: account_creation
-              type: object
-        required: true
-      responses:
-        "200":
-          description: OK
-        "400":
-          description: The specified account ID is invalid
-        "401":
-          description: Authentication failed
-        "404":
-          description: Account not found
-      security:
-      - ApiKeyAuth: []
   /test/{accountID}:
     get:
       description: Get all tests that are stored in the backend and are accessible
@@ -645,23 +609,17 @@ components:
           schema:
             $ref: '#/components/schemas/create_project'
       required: true
-    sign_up:
+    account_creation_finalize:
       content:
         application/json:
           schema:
-            $ref: '#/components/schemas/sign_up'
+            $ref: '#/components/schemas/account_creation_finalize'
       required: true
     genericTestAnswers:
       content:
         application/json:
           schema:
             $ref: '#/components/schemas/genericTestAnswers'
-      required: true
-    account_creation:
-      content:
-        application/json:
-          schema:
-            $ref: '#/components/schemas/account_creation'
       required: true
     Refresh_details:
       content:
@@ -710,23 +668,6 @@ components:
           type: string
       title: test
       type: object
-    sign_up:
-      description: schema for signing up
-      properties:
-        senderAccountID:
-          description: account id of the account that invites the new user
-          pattern: ^[0-9a-f]{8}-[0-9a-f]{4}-[1-5][0-9a-f]{3}-[89ab][0-9a-f]{3}-[0-9a-f]{12}$
-          title: sender account id
-          type: string
-        emailAddress:
-          description: the email address of the newly invited person
-          title: emailAddress
-          type: string
-      required:
-      - emailAddress
-      - senderAccountID
-      title: sign up
-      type: object
     answer_to_question:
       description: the answer to a question
       properties:
@@ -759,31 +700,6 @@ components:
           title: array of answers
           type: array
       title: genericTestAnswers
-      type: object
-    account_creation:
-      description: the schema to create the new account
-      properties:
-        firstName:
-          description: first name of the new user
-          title: first name
-          type: string
-        lastName:
-          description: last name of the new user
-          title: last name
-          type: string
-        senderAccountID:
-          description: the id of the account that invited the new user
-          pattern: ^[0-9a-f]{8}-[0-9a-f]{4}-[1-5][0-9a-f]{3}-[89ab][0-9a-f]{3}-[0-9a-f]{12}$
-          title: sender account id
-          type: string
-        emailAddress:
-          type: string
-      required:
-      - emailAddress
-      - firstName
-      - lastName
-      - senderAccountID
-      title: account_creation
       type: object
     project:
       description: a project object
@@ -978,6 +894,27 @@ components:
       - projectTitle
       - tests
       title: create_project
+      type: object
+    account_creation_finalize:
+      properties:
+        emailAddress:
+          description: email address of the participant
+          type: string
+        firstName:
+          description: first name of the user
+          type: string
+        lastName:
+          description: last name of the user
+          type: string
+        password:
+          description: password of the user
+          type: string
+      required:
+      - emailAddress
+      - firstName
+      - lastName
+      - password
+      title: account_creation_finalize
       type: object
     Refresh_details:
       description: Details necessary to refresh the access token

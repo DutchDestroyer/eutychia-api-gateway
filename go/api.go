@@ -20,9 +20,9 @@ import (
 // The DefaultApiRouter implementation should parse necessary information from the http request, 
 // pass the data to a DefaultApiServicer to perform the required actions, then write the service results to the http response.
 type DefaultApiRouter interface { 
-	CreateNewAccount(http.ResponseWriter, *http.Request)
 	CreatesNewProject(http.ResponseWriter, *http.Request)
 	DeleteAccountByID(http.ResponseWriter, *http.Request)
+	FinalizeAccountCreation(http.ResponseWriter, *http.Request)
 	GetAccountByID(http.ResponseWriter, *http.Request)
 	GetAllTests(http.ResponseWriter, *http.Request)
 	GetGenericTestOfProject(http.ResponseWriter, *http.Request)
@@ -31,7 +31,6 @@ type DefaultApiRouter interface {
 	LogInWithAccount(http.ResponseWriter, *http.Request)
 	LogOutWithAccount(http.ResponseWriter, *http.Request)
 	RefreshAccessToken(http.ResponseWriter, *http.Request)
-	SendEmailForSignUp(http.ResponseWriter, *http.Request)
 	SubmitAnswerToTest(http.ResponseWriter, *http.Request)
 }
 
@@ -41,9 +40,9 @@ type DefaultApiRouter interface {
 // while the service implementation can ignored with the .openapi-generator-ignore file 
 // and updated with the logic required for the API.
 type DefaultApiServicer interface { 
-	CreateNewAccount(context.Context, AccountCreation) (ImplResponse, error)
 	CreatesNewProject(context.Context, string, CreateProject) (ImplResponse, error)
 	DeleteAccountByID(context.Context, string) (ImplResponse, error)
+	FinalizeAccountCreation(context.Context, string, AccountCreationFinalize) (ImplResponse, error)
 	GetAccountByID(context.Context, string) (ImplResponse, error)
 	GetAllTests(context.Context, string) (ImplResponse, error)
 	GetGenericTestOfProject(context.Context, string, string) (ImplResponse, error)
@@ -52,6 +51,5 @@ type DefaultApiServicer interface {
 	LogInWithAccount(context.Context, LoginAccount) (ImplResponse, error)
 	LogOutWithAccount(context.Context, LogoutAccount) (ImplResponse, error)
 	RefreshAccessToken(context.Context, RefreshDetails) (ImplResponse, error)
-	SendEmailForSignUp(context.Context, SignUp) (ImplResponse, error)
 	SubmitAnswerToTest(context.Context, string, string, GenericTestAnswers) (ImplResponse, error)
 }

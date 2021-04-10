@@ -129,6 +129,16 @@ func (s *DefaultApiService) DeleteAccountByID(ctx context.Context, accountID str
 	return Response(http.StatusNotImplemented, nil), errors.New("DeleteAccountByID method not implemented")
 }
 
+// SendEmailForSignUp -
+func (s *DefaultApiService) FinalizeAccountCreation(ctx context.Context, accountID string, accountCreationFinalize AccountCreationFinalize) (ImplResponse, error) {
+	// TODO - update SendEmailForSignUp with the required logic for this service method.
+
+	//TODO: Uncomment the next line to return response Response(200, {}) or use other options such as http.Ok ...
+	//return Response(200, nil),nil
+
+	return Response(http.StatusNotImplemented, nil), errors.New("SendEmailForSignUp method not implemented")
+}
+
 // GetAccountByID -
 func (s *DefaultApiService) GetAccountByID(ctx context.Context, accountID string) (ImplResponse, error) {
 	// TODO - update GetAccountByID with the required logic for this service method.
