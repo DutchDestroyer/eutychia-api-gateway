@@ -11,7 +11,7 @@ type AccountDAO struct {
 	AccountID             string
 	FirstName             string
 	LastName              string
-	Username              string
+	EmailAddress          string
 	Password              string
 	AccountType           string
 	ProjectsAsResearcher  []string // Only the IDs are stored here
@@ -40,7 +40,17 @@ func CreateInitialParticipantAccount(firstName string, lastName string, emailAdd
 	return accountID, nil
 }
 
-// FinalizeAccount
+// FinalizeAccountCreation
+func FinalizeAccountCreation(accountID string, encryptedpassword []byte) error {
+	for i := range accountDatabase {
+		if accountDatabase[i].AccountID == accountID {
+			accountDatabase[i].Password = string(encryptedpassword)
+			return nil
+		}
+	}
+
+	return errors.New("Account not found")
+}
 
 // GetDatabaseEntry gets an entry from the database
 func GetDatabaseEntry(accountID string) (AccountDAO, error) {
@@ -55,7 +65,7 @@ func GetDatabaseEntry(accountID string) (AccountDAO, error) {
 // GetDatabaseEntryBasedOnMail when user logs in, id is not known
 func GetDatabaseEntryBasedOnMail(username string) (AccountDAO, error) {
 	for i := range accountDatabase {
-		if accountDatabase[i].Username == username {
+		if accountDatabase[i].EmailAddress == username {
 			return accountDatabase[i], nil
 		}
 	}

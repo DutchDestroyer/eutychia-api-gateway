@@ -130,13 +130,24 @@ func (s *DefaultApiService) DeleteAccountByID(ctx context.Context, accountID str
 }
 
 // SendEmailForSignUp -
-func (s *DefaultApiService) FinalizeAccountCreation(ctx context.Context, accountID string, accountCreationFinalize AccountCreationFinalize) (ImplResponse, error) {
-	// TODO - update SendEmailForSignUp with the required logic for this service method.
+func (s *DefaultApiService) FinalizeAccountCreation(ctx context.Context, accountID string, aCF AccountCreationFinalize) (ImplResponse, error) {
 
-	//TODO: Uncomment the next line to return response Response(200, {}) or use other options such as http.Ok ...
-	//return Response(200, nil),nil
+	isNewAccount, err1 := account.FinaleAccountCreation(accountID, aCF.EmailAddress, aCF.Password, aCF.FirstName, aCF.LastName)
 
-	return Response(http.StatusNotImplemented, nil), errors.New("SendEmailForSignUp method not implemented")
+	if err1 != nil {
+		if isNewAccount {
+			return Response(http.StatusInternalServerError, nil), err1
+		} else {
+			return Response(http.StatusUnauthorized, nil), err1
+		}
+	}
+
+	if !isNewAccount {
+		// This should never happen!!!
+		return Response(http.StatusUnauthorized, nil), errors.New("Invalid")
+	}
+
+	return Response(http.StatusOK, nil), nil
 }
 
 // GetAccountByID -

@@ -17,7 +17,7 @@ func IsValidPasswordLogin(acc models.Account) (database.AccountDAO, error) {
 		return database.AccountDAO{}, errDAO
 	}
 
-	saltedPassword, err := bcrypt.GenerateFromPassword([]byte(accountDAO.Password), bcrypt.MinCost)
+	saltedPassword, err := EncryptPassword(accountDAO.Password)
 
 	if err != nil {
 		return database.AccountDAO{}, err
@@ -37,4 +37,14 @@ func IsValidPassword(hashedPwd []byte, plainPwd []byte) bool {
 	err := bcrypt.CompareHashAndPassword(hashedPwd, plainPwd)
 
 	return err == nil
+}
+
+func EncryptPassword(password string) ([]byte, error) {
+	pw, err1 := bcrypt.GenerateFromPassword([]byte(password), bcrypt.MinCost)
+
+	if err1 != nil {
+		return []byte{}, err1
+	}
+
+	return pw, nil
 }
