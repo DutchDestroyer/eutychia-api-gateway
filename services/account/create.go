@@ -6,8 +6,8 @@ import (
 	"github.com/DutchDestroyer/eutychia-api-gateway/services/authentication"
 )
 
-//CreateAccount creates an account after making an http request after logging in
-func CreateAccount(emailAddress string, password string, token string, accountID string, sessionID string) *models.Account {
+//GetAccount creates an account after making an http request after logging in
+func GetAccount(emailAddress string, password string, token string, accountID string, sessionID string) *models.Account {
 
 	return &models.Account{
 		Username:     emailAddress,

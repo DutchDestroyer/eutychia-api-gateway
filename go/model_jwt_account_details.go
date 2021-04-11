@@ -12,6 +12,6 @@ package openapi
 // JwtAccountDetails - the account details provided when the user logs in as a JWT token
 type JwtAccountDetails struct {
 
-	// The jwt token with all information.
-	JWT string `json:"JWT"`
+	// The new access token
+	AccessToken string `json:"accessToken"`
 }

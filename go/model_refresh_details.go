@@ -15,6 +15,9 @@ type RefreshDetails struct {
 	// The account ID.
 	AccountID string `json:"accountID"`
 
+	// The id of the session, related to the refresh token
+	SessionID string `json:"sessionID"`
+
 	// the refreshToken used to update the acces token
 	RefreshToken string `json:"refreshToken"`
 }

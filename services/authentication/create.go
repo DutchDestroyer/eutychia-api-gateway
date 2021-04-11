@@ -37,23 +37,22 @@ func CreateAccountAuthentication(account *models.Account) error {
 }
 
 // UpdateAccountAuthentication create authentication of the account when logging in with refreshtoken
-func UpdateAccountAuthentication(account *models.Account) error {
+func UpdateAccountAuthentication(accountID string, sessionID string) (string, error) {
 
-	authToken, authTokenKey, authErr := createAuthToken(account.AccountID, account.SessionID)
+	authToken, authTokenKey, authErr := createAuthToken(accountID, sessionID)
 	if authErr != nil {
-		return authErr
+		return "", authErr
 	}
 
-	dbErr := database.UpdateSessionAuthToken(account.AccountID, account.SessionID, authToken, authTokenKey)
+	dbErr := database.UpdateSessionAuthToken(accountID, sessionID, authToken, authTokenKey)
 	if dbErr != nil {
-		return dbErr
+		return "", dbErr
 	}
 
-	account.AuthToken = authToken
-
-	return nil
+	return authToken, nil
 }
 
+// Creates an auth token
 func createAuthToken(accountID string, sessionID string) (string, rsa.PublicKey, error) {
 	return CreateToken(accountID, sessionID, time.Duration(time.Duration.Minutes(15)))
 }

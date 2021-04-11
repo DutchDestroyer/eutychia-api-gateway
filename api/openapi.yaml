@@ -308,10 +308,9 @@ paths:
           application/json:
             example:
               password:
-                value:
-                  grantType: password
-                  emailAddress: markwijnbergen@hey.com
-                  password: password
+                accountID: 0a8ba9ad-a93d-4991-8c23-c178b09fe6a2
+                sessionID: 0a8ba9ad-a93d-4991-8c23-c178b09fe6a2
+                refreshToken: eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJhY2NvdW50SUQiOiIwYThiYTlhZC1hOTNkLTQ5OTEtOGMyMy1jMTc4YjA5ZmU2YTIiLCJzZXNzaW9uSUQiOiIwYThiYTlhZC1hOTNkLTQ5OTEtOGMyMy1jMTc4YjA5ZmU2YTIiLCJleHBpcnlEYXRlIjoiMjAyMS0wMi0wNFQxNzowMTo0MC40NzRaIn0.JvCzrIHI60bm-Qekl3De0j4UEtQS-BykbDt9bhtmhLY
             schema:
               description: Details necessary to refresh the access token
               properties:
@@ -319,13 +318,17 @@ paths:
                   description: The account ID.
                   pattern: ^[0-9a-f]{8}-[0-9a-f]{4}-[1-5][0-9a-f]{3}-[89ab][0-9a-f]{3}-[0-9a-f]{12}$
                   type: string
+                sessionID:
+                  description: The id of the session, related to the refresh token
+                  pattern: ^[0-9a-f]{8}-[0-9a-f]{4}-[1-5][0-9a-f]{3}-[89ab][0-9a-f]{3}-[0-9a-f]{12}$
+                  type: string
                 refreshToken:
                   description: the refreshToken used to update the acces token
-                  pattern: ^[0-9a-f]{8}-[0-9a-f]{4}-[1-5][0-9a-f]{3}-[89ab][0-9a-f]{3}-[0-9a-f]{12}$
                   type: string
               required:
               - accountID
               - refreshToken
+              - sessionID
               title: Refresh details
               type: object
         required: true
@@ -334,7 +337,7 @@ paths:
           content:
             application/json:
               example:
-                JWT: eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJhY2NvdW50SUQiOiIxMjM0NTY3ODkwIiwibmFtZSI6Ik1hcmsgV2lqbmJlcmdlbiIsImFjY2Vzc3Rva2VuIjoxNTE2MjM5MDIyLCJyZWZyZXNodG9rZW4iOjc1Mzk3NTM1N30.V1JMLTr7R_yPdkbpZQ9kpUmmmq8cyEbpNRk5B78fpYw
+                accessToken: eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJhY2NvdW50SUQiOiIxMjM0NTY3ODkwIiwibmFtZSI6Ik1hcmsgV2lqbmJlcmdlbiIsImFjY2Vzc3Rva2VuIjoxNTE2MjM5MDIyLCJyZWZyZXNodG9rZW4iOjc1Mzk3NTM1N30.V1JMLTr7R_yPdkbpZQ9kpUmmmq8cyEbpNRk5B78fpYw
               schema:
                 $ref: '#/components/schemas/JWT_account_details'
           description: OK
@@ -862,13 +865,13 @@ components:
     JWT_account_details:
       description: the account details provided when the user logs in as a JWT token
       example:
-        JWT: JWT
+        accessToken: accessToken
       properties:
-        JWT:
-          description: The jwt token with all information.
+        accessToken:
+          description: The new access token
           type: string
       required:
-      - JWT
+      - accessToken
       title: JWT account details
       type: object
     create_project:
@@ -923,13 +926,17 @@ components:
           description: The account ID.
           pattern: ^[0-9a-f]{8}-[0-9a-f]{4}-[1-5][0-9a-f]{3}-[89ab][0-9a-f]{3}-[0-9a-f]{12}$
           type: string
+        sessionID:
+          description: The id of the session, related to the refresh token
+          pattern: ^[0-9a-f]{8}-[0-9a-f]{4}-[1-5][0-9a-f]{3}-[89ab][0-9a-f]{3}-[0-9a-f]{12}$
+          type: string
         refreshToken:
           description: the refreshToken used to update the acces token
-          pattern: ^[0-9a-f]{8}-[0-9a-f]{4}-[1-5][0-9a-f]{3}-[89ab][0-9a-f]{3}-[0-9a-f]{12}$
           type: string
       required:
       - accountID
       - refreshToken
+      - sessionID
       title: Refresh details
       type: object
     Account_details:

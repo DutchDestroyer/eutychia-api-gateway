@@ -249,8 +249,12 @@ func newRandomKey() []byte {
 // LogInWithAccount -
 func (s *DefaultApiService) LogInWithAccount(ctx context.Context, loginAccount LoginAccount) (ImplResponse, error) {
 
+	if !services.IsCorrectUUID(loginAccount.AccountID) {
+		return Response(http.StatusBadRequest, nil), errors.New("Invalid account ID")
+	}
+
 	// create the account
-	account := account.CreateAccount(loginAccount.EmailAddress, loginAccount.Password, loginAccount.RefreshToken, loginAccount.AccountID, loginAccount.SessionID)
+	account := account.GetAccount(loginAccount.EmailAddress, loginAccount.Password, loginAccount.RefreshToken, loginAccount.AccountID, loginAccount.SessionID)
 
 	// validate the account is correct
 	if loginAccount.GrantType == "password" {
@@ -270,6 +274,9 @@ func (s *DefaultApiService) LogInWithAccount(ctx context.Context, loginAccount L
 		if authError != nil {
 			return Response(http.StatusInternalServerError, nil), authError
 		}
+
+		return Response(http.StatusOK,
+			AccountDetails{account.AccountID, account.SessionID, account.AuthToken, account.RefreshToken, account.AccountType}), nil
 	} else if loginAccount.GrantType == "refreshToken" {
 		validationError := authentication.IsValidTokenLogin(*account)
 		if validationError != nil {
@@ -277,16 +284,16 @@ func (s *DefaultApiService) LogInWithAccount(ctx context.Context, loginAccount L
 		}
 
 		// Create new authtoken for account
-		authError := authentication.UpdateAccountAuthentication(account)
+		newAuthToken, authError := authentication.UpdateAccountAuthentication(account.AccountID, account.SessionID)
 		if authError != nil {
 			return Response(http.StatusInternalServerError, nil), authError
 		}
+
+		return Response(http.StatusOK,
+			AccountDetails{account.AccountID, account.SessionID, newAuthToken, account.RefreshToken, account.AccountType}), nil
 	} else {
 		return Response(http.StatusBadRequest, nil), errors.New("grant type not recognized")
 	}
-
-	return Response(http.StatusOK,
-		AccountDetails{account.AccountID, account.SessionID, account.AuthToken, account.RefreshToken, account.AccountType}), nil
 }
 
 // LogOutWithAccount -
@@ -301,6 +308,10 @@ func (s *DefaultApiService) LogOutWithAccount(ctx context.Context, logoutAccount
 
 // RefreshAccessToken -
 func (s *DefaultApiService) RefreshAccessToken(ctx context.Context, refreshDetails RefreshDetails) (ImplResponse, error) {
+
+	if !services.IsCorrectUUID(refreshDetails.AccountID) || !services.IsCorrectUUID(refreshDetails.SessionID) {
+		return Response(http.StatusBadRequest, nil), errors.New("Invalid uuid")
+	}
 
 	// TODO - update RefreshAccessToken with the required logic for this service method.
 	// Add api_default_service.go to the .openapi-generator-ignore to avoid overwriting this service implementation when updating open api generation.
