@@ -2,7 +2,7 @@ package services
 
 import "github.com/DutchDestroyer/eutychia-api-gateway/database"
 
-func LinkParticipantToAccount(emailAddress string, firstName string, lastName string) (string, error) {
+func linkParticipantToAccount(emailAddress string, firstName string, lastName string) (string, error) {
 	account, err1 := database.GetDatabaseEntryBasedOnMail(emailAddress)
 
 	if err1 != nil {

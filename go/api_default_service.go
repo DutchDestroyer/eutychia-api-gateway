@@ -278,7 +278,7 @@ func (s *DefaultApiService) LogInWithAccount(ctx context.Context, loginAccount L
 		return Response(http.StatusOK,
 			AccountDetails{account.AccountID, account.SessionID, account.AuthToken, account.RefreshToken, account.AccountType}), nil
 	} else if loginAccount.GrantType == "refreshToken" {
-		validationError := authenticationServices.IsValidTokenLogin(*account)
+		validationError := authenticationServices.IsValidTokenLogin(account.RefreshToken, account.AccountID, account.SessionID, loginAccount.GrantType)
 		if validationError != nil {
 			return Response(http.StatusUnauthorized, nil), validationError
 		}
@@ -303,12 +303,19 @@ func (s *DefaultApiService) LogOutWithAccount(ctx context.Context, logoutAccount
 		return Response(http.StatusBadRequest, nil), errors.New("Invalid uuid")
 	}
 
-	// TODO - update LogOutWithAccount with the required logic for this service method.
+	err1 := authenticationServices.IsValidTokenLogin(logoutAccount.AccessToken, logoutAccount.AccountID, logoutAccount.SessionID, "authToken")
 
-	//TODO: Uncomment the next line to return response Response(200, {}) or use other options such as http.Ok ...
-	//return Response(200, nil),nil
+	if err1 != nil {
+		return Response(http.StatusUnauthorized, nil), err1
+	}
 
-	return Response(http.StatusNotImplemented, nil), errors.New("LogOutWithAccount method not implemented")
+	err := authenticationServices.LogOutWithAccount(logoutAccount.SessionID, logoutAccount.AccountID, logoutAccount.AccessToken)
+
+	if err != nil {
+		return Response(http.StatusInternalServerError, nil), err
+	}
+
+	return Response(http.StatusOK, nil), nil
 }
 
 // RefreshAccessToken -
@@ -318,10 +325,16 @@ func (s *DefaultApiService) RefreshAccessToken(ctx context.Context, refreshDetai
 		return Response(http.StatusBadRequest, nil), errors.New("Invalid uuid")
 	}
 
+	err1 := authenticationServices.IsValidTokenLogin(refreshDetails.RefreshToken, refreshDetails.AccountID, refreshDetails.SessionID, "refreshToken")
+
+	if err1 != nil {
+		return Response(http.StatusUnauthorized, nil), err1
+	}
+
 	newAuthToken, err := authenticationServices.RefreshAccessToken(refreshDetails.AccountID, refreshDetails.SessionID, refreshDetails.RefreshToken)
 
 	if err != nil {
-		return Response(http.StatusUnauthorized, nil), err
+		return Response(http.StatusInternalServerError, nil), err
 	}
 
 	return Response(http.StatusOK, newAuthToken), nil

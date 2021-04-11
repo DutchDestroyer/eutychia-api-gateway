@@ -11,7 +11,7 @@ func AddNewProject(projectName string, tests []string, researcher string, partic
 	var participantIDs []string
 
 	for i := range participants {
-		participantID, err := LinkParticipantToAccount(
+		participantID, err := linkParticipantToAccount(
 			participants[i].EmailAddress, participants[i].FirstName, participants[i].LastName)
 
 		if err != nil {

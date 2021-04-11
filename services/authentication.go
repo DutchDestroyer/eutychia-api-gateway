@@ -61,22 +61,8 @@ func UpdateAccountAuthentication(accountID string, sessionID string) (string, er
 	return authToken, nil
 }
 
-// Creates an auth token
-func createAuthToken(accountID string, sessionID string) (string, rsa.PublicKey, error) {
-	return CreateToken(accountID, sessionID, time.Duration(time.Duration.Minutes(15)))
-}
-
-func createRefreshToken(accountID string, sessionID string) (string, rsa.PublicKey, error) {
-	return CreateToken(accountID, sessionID, time.Duration(time.Duration.Hours(24)))
-}
-
+//LogOutWithAccount logs out the provided session of the provided account
 func LogOutWithAccount(sessionID string, accountID string, accessToken string) error {
-	err := ValidateToken(accessToken, accountID, sessionID, "authToken")
-
-	if err != nil {
-		return err
-	}
-
 	return database.RemoveSession(accountID, sessionID)
 }
 
@@ -89,45 +75,20 @@ func IsValidPasswordLogin(acc models.Account) (database.AccountDAO, error) {
 		return database.AccountDAO{}, errDAO
 	}
 
-	saltedPassword, err := EncryptPassword(accountDAO.Password)
+	saltedPassword, err := encryptPassword(accountDAO.Password)
 
 	if err != nil {
 		return database.AccountDAO{}, err
 	}
 
-	if IsValidPassword(saltedPassword, []byte(acc.Password)) {
+	if isValidPassword(saltedPassword, []byte(acc.Password)) {
 		return accountDAO, nil
 	}
 
 	return database.AccountDAO{}, errors.New("Invalid email password combination")
 }
 
-// IsValidPassword checks whether the password is valid
-func IsValidPassword(hashedPwd []byte, plainPwd []byte) bool {
-	// Since we'll be getting the hashed password from the DB it
-	// will be a string so we'll need to convert it to a byte slice
-	err := bcrypt.CompareHashAndPassword(hashedPwd, plainPwd)
-
-	return err == nil
-}
-
-//EncryptPassword encrypts a password
-func EncryptPassword(password string) ([]byte, error) {
-	pw, err1 := bcrypt.GenerateFromPassword([]byte(password), bcrypt.MinCost)
-
-	if err1 != nil {
-		return []byte{}, err1
-	}
-
-	return pw, nil
-}
-
 func RefreshAccessToken(accountID string, sessionID string, refreshToken string) (string, error) {
-	err1 := ValidateToken(refreshToken, accountID, sessionID, "refreshToken")
-	if err1 != nil {
-		return "", err1
-	}
-
 	newAuthToken, err2 := UpdateAccountAuthentication(accountID, sessionID)
 
 	if err2 != nil {
@@ -137,13 +98,40 @@ func RefreshAccessToken(accountID string, sessionID string, refreshToken string)
 	return newAuthToken, nil
 }
 
-// IsValidTokenLogin determines whether the token validation is done correctly
-func IsValidTokenLogin(acc models.Account) error {
-	return ValidateToken(acc.RefreshToken, acc.AccountID, acc.SessionID, "refreshToken")
+// IsValidTokenLogin validates the token
+func IsValidTokenLogin(token string, accountID string, sessionID string, tokenType string) error {
+
+	sessionData, errDB := database.GetSessionData(accountID, sessionID)
+
+	if errDB != nil {
+		return errDB
+	}
+
+	var tokenKey rsa.PublicKey
+
+	if tokenType == "refreshToken" {
+		tokenKey = sessionData.RefreshTokenKey
+	} else if tokenType == "authToken" {
+		tokenKey = sessionData.AuthTokenKey
+	} else {
+		return errors.New("invalid token")
+	}
+
+	_, err := jwt.Parse([]byte(token), jwt.WithValidate(true), jwt.WithVerify(jwa.RS256, tokenKey))
+
+	return err
 }
 
-// CreateToken Creates a token with a specific time
-func CreateToken(accountID string, sessionID string, timespan time.Duration) (string, rsa.PublicKey, error) {
+func createAuthToken(accountID string, sessionID string) (string, rsa.PublicKey, error) {
+	return createToken(accountID, sessionID, time.Duration(time.Duration.Minutes(15)))
+}
+
+func createRefreshToken(accountID string, sessionID string) (string, rsa.PublicKey, error) {
+	return createToken(accountID, sessionID, time.Duration(time.Duration.Hours(24)))
+}
+
+// createToken Creates a token with a specific time
+func createToken(accountID string, sessionID string, timespan time.Duration) (string, rsa.PublicKey, error) {
 	alg := jwa.RS256
 	key, errGenerate := rsa.GenerateKey(rand.Reader, 2048)
 	if errGenerate != nil {
@@ -165,26 +153,21 @@ func CreateToken(accountID string, sessionID string, timespan time.Duration) (st
 	return string(signed), key.PublicKey, nil
 }
 
-// ValidateToken validates the token
-func ValidateToken(token string, accountID string, sessionID string, tokenType string) error {
+//encryptPassword encrypts a password
+func encryptPassword(password string) ([]byte, error) {
+	pw, err1 := bcrypt.GenerateFromPassword([]byte(password), bcrypt.MinCost)
 
-	sessionData, errDB := database.GetSessionData(accountID, sessionID)
-
-	if errDB != nil {
-		return errDB
+	if err1 != nil {
+		return []byte{}, err1
 	}
 
-	var tokenKey rsa.PublicKey
+	return pw, nil
+}
 
-	if tokenType == "refreshToken" {
-		tokenKey = sessionData.RefreshTokenKey
-	} else if tokenType == "authToken" {
-		tokenKey = sessionData.AuthTokenKey
-	} else {
-		return errors.New("invalid token")
-	}
+func isValidPassword(hashedPwd []byte, plainPwd []byte) bool {
+	// Since we'll be getting the hashed password from the DB it
+	// will be a string so we'll need to convert it to a byte slice
+	err := bcrypt.CompareHashAndPassword(hashedPwd, plainPwd)
 
-	_, err := jwt.Parse([]byte(token), jwt.WithValidate(true), jwt.WithVerify(jwa.RS256, tokenKey))
-
-	return err
+	return err == nil
 }

@@ -21,21 +21,21 @@ func GetAccount(emailAddress string, password string, token string, accountID st
 
 // FinaleAccountCreation finalizes the creation of the account by adding the password, but first checks though if this is legitimate
 func FinaleAccountCreation(accountID string, emailAddress string, password string, firstName string, lastName string) (bool, error) {
-	isNewAccount, err1 := IsNewAccount(accountID, emailAddress, firstName, lastName)
+	isNew, err1 := isNewAccount(accountID, emailAddress, firstName, lastName)
 
-	if err1 != nil || !isNewAccount {
-		return isNewAccount, err1
+	if err1 != nil || !isNew {
+		return isNew, err1
 	}
 
-	encPW, err2 := EncryptPassword(password)
+	encPW, err2 := encryptPassword(password)
 
 	if err2 != nil {
-		return isNewAccount, err2
+		return isNew, err2
 	}
 
 	err3 := accountDB.FinalizeAccountCreation(accountID, encPW)
 
-	return isNewAccount, err3
+	return isNew, err3
 }
 
 // IsResearcherAccount determines whether the account is a researcher account, which means it has certain admin rights
@@ -50,7 +50,7 @@ func IsResearcherAccount(accountID string) (bool, error) {
 	return (acc.AccountType == "researcher"), nil
 }
 
-func IsNewAccount(accountID string, emailAddress string, firstName string, lastName string) (bool, error) {
+func isNewAccount(accountID string, emailAddress string, firstName string, lastName string) (bool, error) {
 
 	account, err := accountDB.GetDatabaseEntry(accountID)
 
