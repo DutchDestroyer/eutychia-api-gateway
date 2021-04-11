@@ -14,4 +14,10 @@ type LogoutAccount struct {
 
 	// access token that needs to be revoked to log out
 	AccessToken string `json:"accessToken"`
+
+	// The account ID.
+	AccountID string `json:"accountID"`
+
+	// The id of the session, related to the refresh token
+	SessionID string `json:"sessionID"`
 }

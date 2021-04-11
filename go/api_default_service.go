@@ -298,6 +298,11 @@ func (s *DefaultApiService) LogInWithAccount(ctx context.Context, loginAccount L
 
 // LogOutWithAccount -
 func (s *DefaultApiService) LogOutWithAccount(ctx context.Context, logoutAccount LogoutAccount) (ImplResponse, error) {
+
+	if services.IsCorrectUUID(logoutAccount.AccountID) || services.IsCorrectUUID(logoutAccount.SessionID) {
+		return Response(http.StatusBadRequest, nil), errors.New("Invalid uuid")
+	}
+
 	// TODO - update LogOutWithAccount with the required logic for this service method.
 
 	//TODO: Uncomment the next line to return response Response(200, {}) or use other options such as http.Ok ...
@@ -313,22 +318,13 @@ func (s *DefaultApiService) RefreshAccessToken(ctx context.Context, refreshDetai
 		return Response(http.StatusBadRequest, nil), errors.New("Invalid uuid")
 	}
 
-	// TODO - update RefreshAccessToken with the required logic for this service method.
-	// Add api_default_service.go to the .openapi-generator-ignore to avoid overwriting this service implementation when updating open api generation.
+	newAuthToken, err := authentication.RefreshAccessToken(refreshDetails.AccountID, refreshDetails.SessionID, refreshDetails.RefreshToken)
 
-	//TODO: Uncomment the next line to return response Response(200, AccountDetails{}) or use other options such as http.Ok ...
-	//return Response(200, JwtAccountDetails{}), nil
+	if err != nil {
+		return Response(http.StatusUnauthorized, nil), err
+	}
 
-	//TODO: Uncomment the next line to return response Response(400, {}) or use other options such as http.Ok ...
-	//return Response(400, nil),nil
-
-	//TODO: Uncomment the next line to return response Response(401, {}) or use other options such as http.Ok ...
-	//return Response(401, nil),nil
-
-	//TODO: Uncomment the next line to return response Response(404, {}) or use other options such as http.Ok ...
-	//return Response(404, nil),nil
-
-	return Response(http.StatusNotImplemented, nil), errors.New("RefreshAccessToken method not implemented")
+	return Response(http.StatusOK, newAuthToken), nil
 }
 
 // SubmitAnswerToTest -

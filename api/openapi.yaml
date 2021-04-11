@@ -357,6 +357,8 @@ paths:
           application/json:
             example:
               accessToken: 0a8ba9ad-a93d-4991-8c23-c178b09fe6a2
+              accountID: 0a8ba9ad-a93d-4991-8c23-c178b09fe6a2
+              sessionID: 0a8ba9ad-a93d-4991-8c23-c178b09fe6a2
             schema:
               description: schema to revoke access with the specific account
               properties:
@@ -364,8 +366,18 @@ paths:
                   description: access token that needs to be revoked to log out
                   pattern: ^[0-9a-f]{8}-[0-9a-f]{4}-[1-5][0-9a-f]{3}-[89ab][0-9a-f]{3}-[0-9a-f]{12}$
                   type: string
+                accountID:
+                  description: The account ID.
+                  pattern: ^[0-9a-f]{8}-[0-9a-f]{4}-[1-5][0-9a-f]{3}-[89ab][0-9a-f]{3}-[0-9a-f]{12}$
+                  type: string
+                sessionID:
+                  description: The id of the session, related to the refresh token
+                  pattern: ^[0-9a-f]{8}-[0-9a-f]{4}-[1-5][0-9a-f]{3}-[89ab][0-9a-f]{3}-[0-9a-f]{12}$
+                  type: string
               required:
               - accessToken
+              - accountID
+              - sessionID
               title: logout_account
               type: object
         required: true
@@ -644,8 +656,18 @@ components:
           description: access token that needs to be revoked to log out
           pattern: ^[0-9a-f]{8}-[0-9a-f]{4}-[1-5][0-9a-f]{3}-[89ab][0-9a-f]{3}-[0-9a-f]{12}$
           type: string
+        accountID:
+          description: The account ID.
+          pattern: ^[0-9a-f]{8}-[0-9a-f]{4}-[1-5][0-9a-f]{3}-[89ab][0-9a-f]{3}-[0-9a-f]{12}$
+          type: string
+        sessionID:
+          description: The id of the session, related to the refresh token
+          pattern: ^[0-9a-f]{8}-[0-9a-f]{4}-[1-5][0-9a-f]{3}-[89ab][0-9a-f]{3}-[0-9a-f]{12}$
+          type: string
       required:
       - accessToken
+      - accountID
+      - sessionID
       title: logout_account
       type: object
     test:

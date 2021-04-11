@@ -48,3 +48,16 @@ func GetSessionData(accountID string, sessionID string) (AuthenticationDAO, erro
 	}
 	return AuthenticationDAO{}, err
 }
+
+func RemoveSession(accountID string, sessionID string) error {
+	err := errors.New("could not find session")
+
+	for i := range authenticationTable {
+		if authenticationTable[i].AccountID == accountID && authenticationTable[i].SessionID == sessionID {
+			authenticationTable[i] = authenticationTable[len(authenticationTable)-1]
+			authenticationTable = authenticationTable[:len(authenticationTable)-1]
+			return nil
+		}
+	}
+	return err
+}
