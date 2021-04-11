@@ -103,16 +103,6 @@ func (s *DefaultApiService) CreatesNewProject(ctx context.Context, accountID str
 	return Response(http.StatusOK, nil), nil
 }
 
-// CreateNewAccount -
-func (s *DefaultApiService) CreateNewAccount(ctx context.Context, accountCreation AccountCreation) (ImplResponse, error) {
-	// TODO - update CreateNewAccount with the required logic for this service method.
-
-	//TODO: Uncomment the next line to return response Response(200, {}) or use other options such as http.Ok ...
-	//return Response(200, nil),nil
-
-	return Response(http.StatusNotImplemented, nil), errors.New("CreateNewAccount method not implemented")
-}
-
 // DeleteAccountByID -
 func (s *DefaultApiService) DeleteAccountByID(ctx context.Context, accountID string) (ImplResponse, error) {
 	// TODO - update DeleteAccountByID with the required logic for this service method.
@@ -328,16 +318,6 @@ func (s *DefaultApiService) RefreshAccessToken(ctx context.Context, refreshDetai
 	//return Response(404, nil),nil
 
 	return Response(http.StatusNotImplemented, nil), errors.New("RefreshAccessToken method not implemented")
-}
-
-// SendEmailForSignUp -
-func (s *DefaultApiService) SendEmailForSignUp(ctx context.Context, signUp SignUp) (ImplResponse, error) {
-	// TODO - update SendEmailForSignUp with the required logic for this service method.
-
-	//TODO: Uncomment the next line to return response Response(200, {}) or use other options such as http.Ok ...
-	//return Response(200, nil),nil
-
-	return Response(http.StatusNotImplemented, nil), errors.New("SendEmailForSignUp method not implemented")
 }
 
 // SubmitAnswerToTest -
