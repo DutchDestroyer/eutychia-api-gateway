@@ -16,7 +16,7 @@ import (
 	"os"
 	"strconv"
 
-	servicecors "github.com/DutchDestroyer/eutychia-api-gateway/services/cors"
+	servicecors "github.com/DutchDestroyer/eutychia-api-gateway/services"
 	"github.com/gorilla/handlers"
 	"github.com/gorilla/mux"
 )

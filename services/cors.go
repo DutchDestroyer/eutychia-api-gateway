@@ -1,4 +1,4 @@
-package cors
+package services
 
 // ValidHTTPTypes is an array with all valid http request types
 var ValidHTTPTypes = []string{

@@ -1,4 +1,4 @@
-package participant
+package services
 
 import "github.com/DutchDestroyer/eutychia-api-gateway/database"
 

@@ -1,0 +1,190 @@
+package services
+
+import (
+	"crypto/rand"
+	"crypto/rsa"
+	"time"
+
+	"errors"
+
+	"github.com/google/uuid"
+
+	"github.com/lestrrat-go/jwx/jwa"
+	"github.com/lestrrat-go/jwx/jwt"
+	"golang.org/x/crypto/bcrypt"
+
+	"github.com/DutchDestroyer/eutychia-api-gateway/models"
+
+	"github.com/DutchDestroyer/eutychia-api-gateway/database"
+)
+
+// CreateAccountAuthentication create authentication of the account
+func CreateAccountAuthentication(account *models.Account) error {
+	sessionID := uuid.New().String()
+
+	authToken, authTokenKey, authErr := createAuthToken(account.AccountID, sessionID)
+	if authErr != nil {
+		return authErr
+	}
+
+	refreshToken, refreshTokenKey, refreshErr := createRefreshToken(account.AccountID, sessionID)
+	if refreshErr != nil {
+		return refreshErr
+	}
+
+	dbErr := database.StoreSession(account.AccountID, sessionID, authToken, authTokenKey, refreshToken, refreshTokenKey)
+
+	if dbErr != nil {
+		return dbErr
+	}
+
+	account.SessionID = sessionID
+	account.AuthToken = authToken
+	account.RefreshToken = refreshToken
+
+	return nil
+}
+
+// UpdateAccountAuthentication create authentication of the account when logging in with refreshtoken
+func UpdateAccountAuthentication(accountID string, sessionID string) (string, error) {
+
+	authToken, authTokenKey, authErr := createAuthToken(accountID, sessionID)
+	if authErr != nil {
+		return "", authErr
+	}
+
+	dbErr := database.UpdateSessionAuthToken(accountID, sessionID, authToken, authTokenKey)
+	if dbErr != nil {
+		return "", dbErr
+	}
+
+	return authToken, nil
+}
+
+// Creates an auth token
+func createAuthToken(accountID string, sessionID string) (string, rsa.PublicKey, error) {
+	return CreateToken(accountID, sessionID, time.Duration(time.Duration.Minutes(15)))
+}
+
+func createRefreshToken(accountID string, sessionID string) (string, rsa.PublicKey, error) {
+	return CreateToken(accountID, sessionID, time.Duration(time.Duration.Hours(24)))
+}
+
+func LogOutWithAccount(sessionID string, accountID string, accessToken string) error {
+	err := ValidateToken(accessToken, accountID, sessionID, "authToken")
+
+	if err != nil {
+		return err
+	}
+
+	return database.RemoveSession(accountID, sessionID)
+}
+
+// IsValidPasswordLogin validates password
+func IsValidPasswordLogin(acc models.Account) (database.AccountDAO, error) {
+	// Find email address in db
+	accountDAO, errDAO := database.GetDatabaseEntryBasedOnMail(acc.Username)
+
+	if errDAO != nil {
+		return database.AccountDAO{}, errDAO
+	}
+
+	saltedPassword, err := EncryptPassword(accountDAO.Password)
+
+	if err != nil {
+		return database.AccountDAO{}, err
+	}
+
+	if IsValidPassword(saltedPassword, []byte(acc.Password)) {
+		return accountDAO, nil
+	}
+
+	return database.AccountDAO{}, errors.New("Invalid email password combination")
+}
+
+// IsValidPassword checks whether the password is valid
+func IsValidPassword(hashedPwd []byte, plainPwd []byte) bool {
+	// Since we'll be getting the hashed password from the DB it
+	// will be a string so we'll need to convert it to a byte slice
+	err := bcrypt.CompareHashAndPassword(hashedPwd, plainPwd)
+
+	return err == nil
+}
+
+//EncryptPassword encrypts a password
+func EncryptPassword(password string) ([]byte, error) {
+	pw, err1 := bcrypt.GenerateFromPassword([]byte(password), bcrypt.MinCost)
+
+	if err1 != nil {
+		return []byte{}, err1
+	}
+
+	return pw, nil
+}
+
+func RefreshAccessToken(accountID string, sessionID string, refreshToken string) (string, error) {
+	err1 := ValidateToken(refreshToken, accountID, sessionID, "refreshToken")
+	if err1 != nil {
+		return "", err1
+	}
+
+	newAuthToken, err2 := UpdateAccountAuthentication(accountID, sessionID)
+
+	if err2 != nil {
+		return "", nil
+	}
+
+	return newAuthToken, nil
+}
+
+// IsValidTokenLogin determines whether the token validation is done correctly
+func IsValidTokenLogin(acc models.Account) error {
+	return ValidateToken(acc.RefreshToken, acc.AccountID, acc.SessionID, "refreshToken")
+}
+
+// CreateToken Creates a token with a specific time
+func CreateToken(accountID string, sessionID string, timespan time.Duration) (string, rsa.PublicKey, error) {
+	alg := jwa.RS256
+	key, errGenerate := rsa.GenerateKey(rand.Reader, 2048)
+	if errGenerate != nil {
+		return "", rsa.PublicKey{}, errGenerate
+	}
+
+	// store the public key in the db
+
+	token := jwt.New()
+	token.Set("accountID", accountID)
+	token.Set("sessionID", sessionID)
+	token.Set("expiryDate", time.Now().UTC().Add(timespan))
+	signed, errSign := jwt.Sign(token, alg, key)
+
+	if errSign != nil {
+		return "", rsa.PublicKey{}, errSign
+	}
+
+	return string(signed), key.PublicKey, nil
+}
+
+// ValidateToken validates the token
+func ValidateToken(token string, accountID string, sessionID string, tokenType string) error {
+
+	sessionData, errDB := database.GetSessionData(accountID, sessionID)
+
+	if errDB != nil {
+		return errDB
+	}
+
+	var tokenKey rsa.PublicKey
+
+	if tokenType == "refreshToken" {
+		tokenKey = sessionData.RefreshTokenKey
+	} else if tokenType == "authToken" {
+		tokenKey = sessionData.AuthTokenKey
+	} else {
+		return errors.New("invalid token")
+	}
+
+	_, err := jwt.Parse([]byte(token), jwt.WithValidate(true), jwt.WithVerify(jwa.RS256, tokenKey))
+
+	return err
+}
