@@ -27,7 +27,7 @@ func LinkParticipantToAccount(emailAddress string, firstName string, lastName st
 	account, err1 := database.GetDatabaseEntryBasedOnMail(emailAddress)
 
 	if err1 != nil {
-		if err1.Error() == "not found" {
+		if account.AccountID == "" {
 			// participant is not yet known in database
 			// Create the account and send the participant an email so they can sign up
 			accountID, err := database.CreateInitialParticipantAccount(firstName, lastName, emailAddress)
@@ -37,7 +37,7 @@ func LinkParticipantToAccount(emailAddress string, firstName string, lastName st
 			}
 
 			// TODO send email that the user should create an account to participate in research
-
+			SendEmail(emailAddress, "test1")
 			return accountID, nil
 		} else {
 			// something went wrong, return error
@@ -47,6 +47,7 @@ func LinkParticipantToAccount(emailAddress string, firstName string, lastName st
 
 	// if account is not null, send an email to the participant that they have been invited for the research
 	// send email
+	SendEmail(emailAddress, "test2")
 
 	// If account already exists, return the AccountID
 	return account.AccountID, nil
