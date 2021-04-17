@@ -8,15 +8,23 @@ import (
 )
 
 //GetAccount creates an account after making an http request after logging in
-func GetAccount(emailAddress string, password string, token string, accountID string, sessionID string) *models.Account {
+func GetAccount(emailAddress string, password string, token string, accountID string, sessionID string) (*models.Account, error) {
+
+	email := models.EmailAddress{EmailAddress: emailAddress}
+
+	validationError := email.IsValidEmailAddress()
+
+	if validationError != nil {
+		return &models.Account{}, validationError
+	}
 
 	return &models.Account{
-		Username:     emailAddress,
+		Username:     email,
 		Password:     password,
 		RefreshToken: token,
 		AccountID:    accountID,
 		SessionID:    sessionID,
-	}
+	}, nil
 }
 
 // FinaleAccountCreation finalizes the creation of the account by adding the password, but first checks though if this is legitimate

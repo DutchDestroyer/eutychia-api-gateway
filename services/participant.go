@@ -1,8 +1,29 @@
 package services
 
-import "github.com/DutchDestroyer/eutychia-api-gateway/database"
+import (
+	"github.com/DutchDestroyer/eutychia-api-gateway/database"
+	"github.com/DutchDestroyer/eutychia-api-gateway/models"
+)
 
-func linkParticipantToAccount(emailAddress string, firstName string, lastName string) (string, error) {
+func CreateParticipant(firstName string, lastName string, emailAddress string) (*models.Participant, error) {
+
+	email := models.EmailAddress{EmailAddress: emailAddress}
+
+	validationError := email.IsValidEmailAddress()
+
+	if validationError != nil {
+		return &models.Participant{}, validationError
+	}
+
+	return &models.Participant{
+		FirstName:    firstName,
+		LastName:     lastName,
+		EmailAddress: email,
+		AccountID:    "",
+	}, nil
+}
+
+func LinkParticipantToAccount(emailAddress string, firstName string, lastName string) (string, error) {
 	account, err1 := database.GetDatabaseEntryBasedOnMail(emailAddress)
 
 	if err1 != nil {
@@ -15,7 +36,7 @@ func linkParticipantToAccount(emailAddress string, firstName string, lastName st
 				return "", err
 			}
 
-			// TODO send email
+			// TODO send email that the user should create an account to participate in research
 
 			return accountID, nil
 		} else {

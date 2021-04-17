@@ -68,8 +68,17 @@ func LogOutWithAccount(sessionID string, accountID string, accessToken string) e
 
 // IsValidPasswordLogin validates password
 func IsValidPasswordLogin(acc models.Account) (database.AccountDAO, error) {
+
+	emailAddress := models.EmailAddress(acc.Username)
+
+	emailValidation := emailAddress.IsValidEmailAddress()
+
+	if emailValidation != nil {
+		return database.AccountDAO{}, emailValidation
+	}
+
 	// Find email address in db
-	accountDAO, errDAO := database.GetDatabaseEntryBasedOnMail(acc.Username)
+	accountDAO, errDAO := database.GetDatabaseEntryBasedOnMail(emailAddress.EmailAddress)
 
 	if errDAO != nil {
 		return database.AccountDAO{}, errDAO

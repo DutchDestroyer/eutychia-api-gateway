@@ -84,13 +84,14 @@ func (s *DefaultApiService) CreatesNewProject(ctx context.Context, accountID str
 	var participants []models.Participant
 
 	for i := range createProject.Participants {
-		participants = append(participants,
-			models.Participant{
-				FirstName:    createProject.Participants[i].Firstame,
-				LastName:     createProject.Participants[i].Lastname,
-				EmailAddress: createProject.Participants[i].EmailAddress,
-				AccountID:    "",
-			})
+		p := createProject.Participants[i]
+		participant, partError := services.CreateParticipant(p.Firstame, p.Lastname, p.EmailAddress)
+
+		if partError != nil {
+			return Response(http.StatusBadRequest, nil), partError
+		}
+
+		participants = append(participants, *participant)
 	}
 
 	err2 := projectServices.AddNewProject(createProject.ProjectTitle, createProject.Tests, accountID, participants)
@@ -243,7 +244,11 @@ func (s *DefaultApiService) LogInWithAccount(ctx context.Context, loginAccount L
 	}
 
 	// create the account
-	account := accountServices.GetAccount(loginAccount.EmailAddress, loginAccount.Password, loginAccount.RefreshToken, loginAccount.AccountID, loginAccount.SessionID)
+	account, err := accountServices.GetAccount(loginAccount.EmailAddress, loginAccount.Password, loginAccount.RefreshToken, loginAccount.AccountID, loginAccount.SessionID)
+
+	if err != nil {
+		return Response(http.StatusBadRequest, nil), err
+	}
 
 	// validate the account is correct
 	if loginAccount.GrantType == "password" {

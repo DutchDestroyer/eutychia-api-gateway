@@ -2,7 +2,7 @@ package models
 
 // Account contains all data of the account
 type Account struct {
-	Username string
+	Username EmailAddress
 
 	Password string
 

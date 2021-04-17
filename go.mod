@@ -3,6 +3,7 @@ module github.com/DutchDestroyer/eutychia-api-gateway
 go 1.13
 
 require (
+	github.com/badoux/checkmail v1.2.1 // indirect
 	github.com/google/uuid v1.2.0
 	github.com/gorilla/handlers v1.5.1
 	github.com/gorilla/mux v1.7.3
