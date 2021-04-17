@@ -11,7 +11,6 @@ package openapi
 
 import (
 	"context"
-	"crypto/rand"
 	"errors"
 	"net/http"
 
@@ -234,16 +233,6 @@ func (s *DefaultApiService) GetTestsToPerformByAccount(ctx context.Context, proj
 	}
 
 	return Response(http.StatusOK, TestsProject{TestsToPerform: testProjects}), nil
-}
-
-func newRandomKey() []byte {
-	key := make([]byte, 32)
-	if _, err := rand.Read(key); err != nil {
-		// really, what are you gonna do if randomness failed?
-		panic(err)
-	}
-
-	return key
 }
 
 // LogInWithAccount -
