@@ -7,6 +7,25 @@ import (
 	models "github.com/DutchDestroyer/eutychia-api-gateway/models"
 )
 
+type IAccountService interface {
+	finalizeAccountCreation(string, []byte) error
+	getDatabaseEntry(string) (accountDB.AccountDAO, error)
+}
+
+type accDB struct{}
+
+func (a accDB) finalizeAccountCreation(accountID string, encryptedpassword []byte) error {
+	return accountDB.FinalizeAccountCreation(accountID, encryptedpassword)
+}
+
+func (a accDB) getDatabaseEntry(accountID string) (accountDB.AccountDAO, error) {
+	return accountDB.GetDatabaseEntry(accountID)
+}
+
+func NewAccDB() IAccountService {
+	return accDB{}
+}
+
 //GetAccount creates an account after making an http request after logging in
 func GetAccount(emailAddress string, password string, token string, accountID string, sessionID string) (*models.Account, error) {
 
@@ -28,8 +47,8 @@ func GetAccount(emailAddress string, password string, token string, accountID st
 }
 
 // FinaleAccountCreation finalizes the creation of the account by adding the password, but first checks though if this is legitimate
-func FinaleAccountCreation(accountID string, emailAddress string, password string, firstName string, lastName string) (bool, error) {
-	isNew, err1 := isNewAccount(accountID, emailAddress, firstName, lastName)
+func FinaleAccountCreation(accountID string, emailAddress string, password string, firstName string, lastName string, accService IAccountService) (bool, error) {
+	isNew, err1 := isNewAccount(accountID, emailAddress, firstName, lastName, accService)
 
 	if err1 != nil || !isNew {
 		return isNew, err1
@@ -41,15 +60,15 @@ func FinaleAccountCreation(accountID string, emailAddress string, password strin
 		return isNew, err2
 	}
 
-	err3 := accountDB.FinalizeAccountCreation(accountID, encPW)
+	err3 := accService.finalizeAccountCreation(accountID, encPW)
 
 	return isNew, err3
 }
 
 // IsResearcherAccount determines whether the account is a researcher account, which means it has certain admin rights
-func IsResearcherAccount(accountID string) (bool, error) {
+func IsResearcherAccount(accountID string, accService IAccountService) (bool, error) {
 
-	acc, err1 := accountDB.GetDatabaseEntry(accountID)
+	acc, err1 := accService.getDatabaseEntry(accountID)
 
 	if err1 != nil {
 		return false, err1
@@ -58,9 +77,9 @@ func IsResearcherAccount(accountID string) (bool, error) {
 	return (acc.AccountType == "researcher"), nil
 }
 
-func isNewAccount(accountID string, emailAddress string, firstName string, lastName string) (bool, error) {
+func isNewAccount(accountID string, emailAddress string, firstName string, lastName string, accService IAccountService) (bool, error) {
 
-	account, err := accountDB.GetDatabaseEntry(accountID)
+	account, err := accService.getDatabaseEntry(accountID)
 
 	if err != nil {
 		return true, err

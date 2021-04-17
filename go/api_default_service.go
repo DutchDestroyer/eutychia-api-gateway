@@ -39,7 +39,7 @@ func (s *DefaultApiService) GetAllTests(ctx context.Context, accountID string) (
 		return Response(http.StatusBadRequest, nil), errors.New("Incorrect data provided by client")
 	}
 
-	isResearcher, err1 := accountServices.IsResearcherAccount(accountID)
+	isResearcher, err1 := accountServices.IsResearcherAccount(accountID, services.NewAccDB())
 
 	if err1 != nil {
 		return Response(http.StatusInternalServerError, nil), err1
@@ -71,7 +71,7 @@ func (s *DefaultApiService) CreatesNewProject(ctx context.Context, accountID str
 		return Response(http.StatusBadRequest, nil), errors.New("Incorrect data provided by client")
 	}
 
-	isResearcher, err1 := accountServices.IsResearcherAccount(accountID)
+	isResearcher, err1 := accountServices.IsResearcherAccount(accountID, services.NewAccDB())
 
 	if err1 != nil {
 		return Response(http.StatusInternalServerError, nil), err1
@@ -122,7 +122,7 @@ func (s *DefaultApiService) DeleteAccountByID(ctx context.Context, accountID str
 // SendEmailForSignUp -
 func (s *DefaultApiService) FinalizeAccountCreation(ctx context.Context, accountID string, aCF AccountCreationFinalize) (ImplResponse, error) {
 
-	isNewAccount, err1 := accountServices.FinaleAccountCreation(accountID, aCF.EmailAddress, aCF.Password, aCF.FirstName, aCF.LastName)
+	isNewAccount, err1 := accountServices.FinaleAccountCreation(accountID, aCF.EmailAddress, aCF.Password, aCF.FirstName, aCF.LastName, services.NewAccDB())
 
 	if err1 != nil {
 		if isNewAccount {
