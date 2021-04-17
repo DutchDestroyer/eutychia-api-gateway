@@ -14,5 +14,5 @@ func (e *EmailAddress) IsValidEmailAddress() error {
 		return err1
 	}
 
-	return checkmail.ValidateHost(e.EmailAddress)
+	return nil //checkmail.ValidateHost(e.EmailAddress)
 }

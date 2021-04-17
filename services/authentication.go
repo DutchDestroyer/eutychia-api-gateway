@@ -3,6 +3,7 @@ package services
 import (
 	"crypto/rand"
 	"crypto/rsa"
+	"log"
 	"time"
 
 	"errors"
@@ -84,13 +85,9 @@ func IsValidPasswordLogin(acc models.Account) (database.AccountDAO, error) {
 		return database.AccountDAO{}, errDAO
 	}
 
-	saltedPassword, err := encryptPassword(accountDAO.Password)
+	log.Printf(accountDAO.Password)
 
-	if err != nil {
-		return database.AccountDAO{}, err
-	}
-
-	if isValidPassword(saltedPassword, []byte(acc.Password)) {
+	if isValidPassword([]byte(accountDAO.Password), []byte(acc.Password)) {
 		return accountDAO, nil
 	}
 
@@ -173,10 +170,8 @@ func encryptPassword(password string) ([]byte, error) {
 	return pw, nil
 }
 
-func isValidPassword(hashedPwd []byte, plainPwd []byte) bool {
-	// Since we'll be getting the hashed password from the DB it
-	// will be a string so we'll need to convert it to a byte slice
-	err := bcrypt.CompareHashAndPassword(hashedPwd, plainPwd)
+func isValidPassword(dbPassword []byte, givenPassword []byte) bool {
+	err := bcrypt.CompareHashAndPassword(dbPassword, givenPassword)
 
 	return err == nil
 }

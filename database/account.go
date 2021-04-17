@@ -19,10 +19,10 @@ type AccountDAO struct {
 }
 
 var accountDatabase []AccountDAO = []AccountDAO{
-	{"683c5de1-5172-4a94-bd3b-2d4bf58b6b72", "Mark1", "Wijnbergen1", "mark.wijnbergen@hey.com", "test123", "researcher",
+	{"683c5de1-5172-4a94-bd3b-2d4bf58b6b72", "Mark1", "Wijnbergen1", "mark.wijnbergen@hey.com", "$2a$04$cR6VcDXU4cSk0gSd1Hmr4euIfZxcYWunEUs1iMZu29JXeWOUN5O1m", "researcher",
 		[]string{"497aeeaf-0d41-46c4-a5a1-8a88c7b61807", "497aeeaf-0d41-46c4-a5a1-8a88c7b61808", "497aeeaf-0d41-46c4-a5a1-8a88c7b61809"},
 		[]string{"497aeeaf-0d41-46c4-a5a1-8a88c7b61807", "497aeeaf-0d41-46c4-a5a1-8a88c7b61808", "497aeeaf-0d41-46c4-a5a1-8a88c7b61809"}},
-	{"683c5de1-5172-4a94-bd3b-2d4bf58b6b73", "Mark2", "Wijnbergen2", "wijnbergenmark@gmail.com", "test123", "participant",
+	{"683c5de1-5172-4a94-bd3b-2d4bf58b6b73", "Mark2", "Wijnbergen2", "wijnbergenmark@gmail.com", "$2a$04$cR6VcDXU4cSk0gSd1Hmr4euIfZxcYWunEUs1iMZu29JXeWOUN5O1m", "participant",
 		[]string{},
 		[]string{"497aeeaf-0d41-46c4-a5a1-8a88c7b61807", "497aeeaf-0d41-46c4-a5a1-8a88c7b61808"},
 	},

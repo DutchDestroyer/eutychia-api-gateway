@@ -239,10 +239,6 @@ func (s *DefaultApiService) GetTestsToPerformByAccount(ctx context.Context, proj
 // LogInWithAccount -
 func (s *DefaultApiService) LogInWithAccount(ctx context.Context, loginAccount LoginAccount) (ImplResponse, error) {
 
-	if !services.IsCorrectUUID(loginAccount.AccountID) {
-		return Response(http.StatusBadRequest, nil), errors.New("Invalid account ID")
-	}
-
 	// create the account
 	account, err := accountServices.GetAccount(loginAccount.EmailAddress, loginAccount.Password, loginAccount.RefreshToken, loginAccount.AccountID, loginAccount.SessionID)
 
@@ -272,6 +268,10 @@ func (s *DefaultApiService) LogInWithAccount(ctx context.Context, loginAccount L
 		return Response(http.StatusOK,
 			AccountDetails{account.AccountID, account.SessionID, account.AuthToken, account.RefreshToken, account.AccountType}), nil
 	} else if loginAccount.GrantType == "refreshToken" {
+		if !services.IsCorrectUUID(loginAccount.AccountID) {
+			return Response(http.StatusBadRequest, nil), errors.New("Invalid account ID")
+		}
+
 		validationError := authenticationServices.IsValidTokenLogin(account.RefreshToken, account.AccountID, account.SessionID, loginAccount.GrantType)
 		if validationError != nil {
 			return Response(http.StatusUnauthorized, nil), validationError

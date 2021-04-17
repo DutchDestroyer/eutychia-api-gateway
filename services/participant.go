@@ -37,7 +37,11 @@ func LinkParticipantToAccount(emailAddress string, firstName string, lastName st
 			}
 
 			// TODO send email that the user should create an account to participate in research
-			SendEmail(emailAddress, "test1")
+			sendEmailErr := SendEmail(emailAddress, "test1")
+			if sendEmailErr != nil {
+				// Do something to notify the researcher
+			}
+
 			return accountID, nil
 		} else {
 			// something went wrong, return error
@@ -47,7 +51,11 @@ func LinkParticipantToAccount(emailAddress string, firstName string, lastName st
 
 	// if account is not null, send an email to the participant that they have been invited for the research
 	// send email
-	SendEmail(emailAddress, "test2")
+	sendEmailErr := SendEmail(emailAddress, "test2")
+
+	if sendEmailErr != nil {
+		// Do something to notify the researcher
+	}
 
 	// If account already exists, return the AccountID
 	return account.AccountID, nil
