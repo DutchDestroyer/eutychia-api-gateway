@@ -4,6 +4,10 @@ import (
 	"errors"
 )
 
+type IParticipant interface {
+	IsValidParticipant() error
+}
+
 type Participant struct {
 	FirstName    string
 	LastName     string

@@ -22,8 +22,13 @@ type SubmittedAnswerDAO struct {
 
 var submittedAnswersOfTest []SubmittedAnswersOfTestDAO
 
-func StoreAnswers(projectID string, testID string, accountID string, answers []models.SubmittedAnswers) error {
+type ISubmittedAnswerDBService interface {
+	StoreAnswers(string, string, string, []models.SubmittedAnswers) error
+}
 
+type SubmittedAnswerDBService struct{}
+
+func (s *SubmittedAnswerDBService) StoreAnswers(projectID string, testID string, accountID string, answers []models.SubmittedAnswers) error {
 	timenow := time.Now().UTC()
 
 	var submittedAnswers []SubmittedAnswerDAO

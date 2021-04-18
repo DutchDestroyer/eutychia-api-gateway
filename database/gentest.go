@@ -53,8 +53,15 @@ var genericTests []GenericTestDAO = []GenericTestDAO{
 	},
 }
 
+type IGenericTestDBService interface {
+	GetTestsOfIDs([]string) ([]GenericTestDAO, error)
+	GetAllGenericTests() ([]models.GenericTestOverview, error)
+}
+
+type GenericTestDBService struct{}
+
 // GetTestsOfIDs get the tests with specific IDs
-func GetTestsOfIDs(testIDs []string) ([]GenericTestDAO, error) {
+func (g *GenericTestDBService) GetTestsOfIDs(testIDs []string) ([]GenericTestDAO, error) {
 	var testsToReturn []GenericTestDAO
 
 	for i := range genericTests {
@@ -69,7 +76,7 @@ func GetTestsOfIDs(testIDs []string) ([]GenericTestDAO, error) {
 }
 
 // GetAllGenericTests gets all generic tests that are in the database
-func GetAllGenericTests() ([]models.GenericTestOverview, error) {
+func (g *GenericTestDBService) GetAllGenericTests() ([]models.GenericTestOverview, error) {
 	var tests []models.GenericTestOverview
 
 	for i := range genericTests {

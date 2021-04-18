@@ -17,14 +17,23 @@ type AuthenticationDAO struct {
 
 var authenticationTable []AuthenticationDAO
 
+type IAuthenticationDBService interface {
+	StoreSession(string, string, string, rsa.PublicKey, string, rsa.PublicKey) error
+	UpdateSessionAuthToken(string, string, string, rsa.PublicKey) error
+	GetSessionData(string, string) (AuthenticationDAO, error)
+	RemoveSession(string, string) error
+}
+
+type AuthenticationDBService struct{}
+
 //StoreSession Stores the session in the database
-func StoreSession(accountID string, sessionID string, authToken string, authPK rsa.PublicKey, refreshToken string, refreshPK rsa.PublicKey) error {
+func (a *AuthenticationDBService) StoreSession(accountID string, sessionID string, authToken string, authPK rsa.PublicKey, refreshToken string, refreshPK rsa.PublicKey) error {
 	authenticationTable = append(authenticationTable, AuthenticationDAO{accountID, sessionID, authToken, authPK, refreshToken, refreshPK})
 	return nil
 }
 
 //UpdateSessionAuthToken Updates the authtoken of the session in the database
-func UpdateSessionAuthToken(accountID string, sessionID string, authToken string, authPK rsa.PublicKey) error {
+func (a *AuthenticationDBService) UpdateSessionAuthToken(accountID string, sessionID string, authToken string, authPK rsa.PublicKey) error {
 	err := errors.New("could not find session")
 
 	for i := range authenticationTable {
@@ -38,7 +47,7 @@ func UpdateSessionAuthToken(accountID string, sessionID string, authToken string
 }
 
 // GetSessionData retrieves a session from the database
-func GetSessionData(accountID string, sessionID string) (AuthenticationDAO, error) {
+func (a *AuthenticationDBService) GetSessionData(accountID string, sessionID string) (AuthenticationDAO, error) {
 	err := errors.New("could not find session")
 
 	for i := range authenticationTable {
@@ -49,7 +58,7 @@ func GetSessionData(accountID string, sessionID string) (AuthenticationDAO, erro
 	return AuthenticationDAO{}, err
 }
 
-func RemoveSession(accountID string, sessionID string) error {
+func (a *AuthenticationDBService) RemoveSession(accountID string, sessionID string) error {
 	err := errors.New("could not find session")
 
 	for i := range authenticationTable {

@@ -23,9 +23,15 @@ var projects []ProjectDAO = []ProjectDAO{
 		[]string{"25553260-2ae4-465c-8a64-6a5c3ab355d6", "25553260-2ae4-465c-8a64-6a5c3ab355d7", "25553260-2ae4-465c-8a64-6a5c3ab355d8"}},
 }
 
-//AddNewProject adds a new project to the database
-func AddNewProject(projectName string, tests []string, researchers []string, participants []string) error {
+type IProjectDBService interface {
+	AddNewProject(string, []string, []string, []string) error
+	GetProjects([]string) ([]ProjectDAO, error)
+}
 
+type ProjectDBService struct{}
+
+//AddNewProject adds a new project to the database
+func (p *ProjectDBService) AddNewProject(projectName string, tests []string, researchers []string, participants []string) error {
 	projectID := uuid.New()
 
 	projects = append(projects, ProjectDAO{
@@ -36,7 +42,7 @@ func AddNewProject(projectName string, tests []string, researchers []string, par
 }
 
 //GetProjects gets all the projects with the specific IDs
-func GetProjects(projectIDs []string) ([]ProjectDAO, error) {
+func (p *ProjectDBService) GetProjects(projectIDs []string) ([]ProjectDAO, error) {
 	var projectsToInclude []ProjectDAO = []ProjectDAO{}
 
 	for i := range projects {

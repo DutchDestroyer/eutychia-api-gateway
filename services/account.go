@@ -8,37 +8,34 @@ import (
 )
 
 type IAccountService interface {
-	finalizeAccountCreation(string, []byte) error
-	getDatabaseEntry(string) (accountDB.AccountDAO, error)
+	GetAccount(models.IEmailAddress, string, string, string, string) (*models.Account, error)
+	FinaleAccountCreation(string, string, string, string, string) (bool, error)
+	IsResearcherAccount(string) (bool, error)
+	getAccDBService() accountDB.IAccountDBService
+	getAuthService() IAuthenticationService
 }
 
-type accDB struct{}
+type AccountService struct{}
 
-func (a accDB) finalizeAccountCreation(accountID string, encryptedpassword []byte) error {
-	return accountDB.FinalizeAccountCreation(accountID, encryptedpassword)
+func (a AccountService) getAccDBService() accountDB.IAccountDBService {
+	return &accountDB.AccountDBService{}
 }
 
-func (a accDB) getDatabaseEntry(accountID string) (accountDB.AccountDAO, error) {
-	return accountDB.GetDatabaseEntry(accountID)
-}
-
-func NewAccDB() IAccountService {
-	return accDB{}
+func (a AccountService) getAuthService() IAuthenticationService {
+	return &AuthenticationService{}
 }
 
 //GetAccount creates an account after making an http request after logging in
-func GetAccount(emailAddress string, password string, token string, accountID string, sessionID string) (*models.Account, error) {
+func (a AccountService) GetAccount(emailAddress models.IEmailAddress, password string, token string, accountID string, sessionID string) (*models.Account, error) {
 
-	email := models.EmailAddress{EmailAddress: emailAddress}
-
-	validationError := email.IsValidEmailAddress()
+	validationError := emailAddress.IsValidEmailAddress()
 
 	if validationError != nil {
 		return &models.Account{}, validationError
 	}
 
 	return &models.Account{
-		Username:     email,
+		Username:     emailAddress,
 		Password:     password,
 		RefreshToken: token,
 		AccountID:    accountID,
@@ -47,28 +44,28 @@ func GetAccount(emailAddress string, password string, token string, accountID st
 }
 
 // FinaleAccountCreation finalizes the creation of the account by adding the password, but first checks though if this is legitimate
-func FinaleAccountCreation(accountID string, emailAddress string, password string, firstName string, lastName string, accService IAccountService) (bool, error) {
-	isNew, err1 := isNewAccount(accountID, emailAddress, firstName, lastName, accService)
+func (a AccountService) FinaleAccountCreation(accountID string, emailAddress string, password string, firstName string, lastName string) (bool, error) {
+	isNew, err1 := a.isNewAccount(accountID, emailAddress, firstName, lastName)
 
 	if err1 != nil || !isNew {
 		return isNew, err1
 	}
 
-	encPW, err2 := encryptPassword(password)
+	encPW, err2 := a.getAuthService().encryptPassword(password)
 
 	if err2 != nil {
 		return isNew, err2
 	}
 
-	err3 := accService.finalizeAccountCreation(accountID, encPW)
+	err3 := a.getAccDBService().FinalizeAccountCreation(accountID, encPW)
 
 	return isNew, err3
 }
 
 // IsResearcherAccount determines whether the account is a researcher account, which means it has certain admin rights
-func IsResearcherAccount(accountID string, accService IAccountService) (bool, error) {
+func (a AccountService) IsResearcherAccount(accountID string) (bool, error) {
 
-	acc, err1 := accService.getDatabaseEntry(accountID)
+	acc, err1 := a.getAccDBService().GetDatabaseEntry(accountID)
 
 	if err1 != nil {
 		return false, err1
@@ -77,9 +74,9 @@ func IsResearcherAccount(accountID string, accService IAccountService) (bool, er
 	return (acc.AccountType == "researcher"), nil
 }
 
-func isNewAccount(accountID string, emailAddress string, firstName string, lastName string, accService IAccountService) (bool, error) {
+func (a AccountService) isNewAccount(accountID string, emailAddress string, firstName string, lastName string) (bool, error) {
 
-	account, err := accService.getDatabaseEntry(accountID)
+	account, err := a.getAccDBService().GetDatabaseEntry(accountID)
 
 	if err != nil {
 		return true, err

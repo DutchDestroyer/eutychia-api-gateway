@@ -16,10 +16,6 @@ import (
 
 	"github.com/DutchDestroyer/eutychia-api-gateway/models"
 	"github.com/DutchDestroyer/eutychia-api-gateway/services"
-	accountServices "github.com/DutchDestroyer/eutychia-api-gateway/services"
-	authenticationServices "github.com/DutchDestroyer/eutychia-api-gateway/services"
-	gentestServices "github.com/DutchDestroyer/eutychia-api-gateway/services"
-	projectServices "github.com/DutchDestroyer/eutychia-api-gateway/services"
 )
 
 // DefaultApiService is a service that implents the logic for the DefaultApiServicer
@@ -33,13 +29,33 @@ func NewDefaultApiService() DefaultApiServicer {
 	return &DefaultApiService{}
 }
 
+func (s *DefaultApiService) getAccountService() services.IAccountService {
+	return &services.AccountService{}
+}
+
+func (s *DefaultApiService) getAuthService() services.IAuthenticationService {
+	return &services.AuthenticationService{}
+}
+
+func (s *DefaultApiService) getGenTestService() services.IGenTestService {
+	return &services.GenTestService{}
+}
+
+func (s *DefaultApiService) getParticipantService() services.IParticipantService {
+	return &services.ParticipantService{}
+}
+
+func (s *DefaultApiService) getProjectService() services.IProjectService {
+	return &services.ProjectService{}
+}
+
 //GetAllTests
 func (s *DefaultApiService) GetAllTests(ctx context.Context, accountID string) (ImplResponse, error) {
 	if !services.IsCorrectUUID(accountID) {
 		return Response(http.StatusBadRequest, nil), errors.New("Incorrect data provided by client")
 	}
 
-	isResearcher, err1 := accountServices.IsResearcherAccount(accountID, services.NewAccDB())
+	isResearcher, err1 := s.getAccountService().IsResearcherAccount(accountID)
 
 	if err1 != nil {
 		return Response(http.StatusInternalServerError, nil), err1
@@ -49,7 +65,7 @@ func (s *DefaultApiService) GetAllTests(ctx context.Context, accountID string) (
 		return Response(http.StatusForbidden, nil), errors.New("account doesn't have right permissions")
 	}
 
-	genericTests, err2 := gentestServices.GetAllGenericTests()
+	genericTests, err2 := s.getGenTestService().GetAllGenericTests()
 
 	if err2 != nil {
 		return Response(http.StatusInternalServerError, nil), err2
@@ -71,7 +87,7 @@ func (s *DefaultApiService) CreatesNewProject(ctx context.Context, accountID str
 		return Response(http.StatusBadRequest, nil), errors.New("Incorrect data provided by client")
 	}
 
-	isResearcher, err1 := accountServices.IsResearcherAccount(accountID, services.NewAccDB())
+	isResearcher, err1 := s.getAccountService().IsResearcherAccount(accountID)
 
 	if err1 != nil {
 		return Response(http.StatusInternalServerError, nil), err1
@@ -85,7 +101,7 @@ func (s *DefaultApiService) CreatesNewProject(ctx context.Context, accountID str
 
 	for i := range createProject.Participants {
 		p := createProject.Participants[i]
-		participant, partError := services.CreateParticipant(p.Firstame, p.Lastname, p.EmailAddress)
+		participant, partError := s.getParticipantService().CreateParticipant(p.Firstame, p.Lastname, p.EmailAddress)
 
 		if partError != nil {
 			return Response(http.StatusBadRequest, nil), partError
@@ -94,7 +110,7 @@ func (s *DefaultApiService) CreatesNewProject(ctx context.Context, accountID str
 		participants = append(participants, *participant)
 	}
 
-	err2 := projectServices.AddNewProject(createProject.ProjectTitle, createProject.Tests, accountID, participants)
+	err2 := s.getProjectService().AddNewProject(createProject.ProjectTitle, createProject.Tests, accountID, participants)
 
 	if err2 != nil {
 		return Response(http.StatusInternalServerError, nil), err2
@@ -122,7 +138,7 @@ func (s *DefaultApiService) DeleteAccountByID(ctx context.Context, accountID str
 // SendEmailForSignUp -
 func (s *DefaultApiService) FinalizeAccountCreation(ctx context.Context, accountID string, aCF AccountCreationFinalize) (ImplResponse, error) {
 
-	isNewAccount, err1 := accountServices.FinaleAccountCreation(accountID, aCF.EmailAddress, aCF.Password, aCF.FirstName, aCF.LastName, services.NewAccDB())
+	isNewAccount, err1 := s.getAccountService().FinaleAccountCreation(accountID, aCF.EmailAddress, aCF.Password, aCF.FirstName, aCF.LastName)
 
 	if err1 != nil {
 		if isNewAccount {
@@ -168,7 +184,7 @@ func (s *DefaultApiService) GetGenericTestOfProject(ctx context.Context, project
 		return Response(http.StatusBadRequest, nil), errors.New("Incorrect data provided by client")
 	}
 
-	test, err := gentestServices.GetTestData(projectID, testID)
+	test, err := s.getGenTestService().GetTestData(projectID, testID)
 
 	if err != nil {
 		return Response(http.StatusInternalServerError, nil), err
@@ -199,7 +215,7 @@ func (s *DefaultApiService) GetProjectsOfAccount(ctx context.Context, accountID 
 		return Response(http.StatusBadRequest, nil), errors.New("Incorrect data provided by client")
 	}
 
-	projects, err := projectServices.GetProjectsAsParticipantForAccount(accountID)
+	projects, err := s.getProjectService().GetProjectsAsParticipantForAccount(accountID)
 
 	if err != nil {
 		return Response(http.StatusInternalServerError, nil), err
@@ -221,7 +237,7 @@ func (s *DefaultApiService) GetTestsToPerformByAccount(ctx context.Context, proj
 		return Response(http.StatusBadRequest, nil), errors.New("Incorrect data provided by client")
 	}
 
-	tests, errTests := gentestServices.GetTestsOfProject(projectID)
+	tests, errTests := s.getGenTestService().GetTestsOfProject(projectID)
 
 	if errTests != nil {
 		return Response(http.StatusInternalServerError, nil), errTests
@@ -240,7 +256,7 @@ func (s *DefaultApiService) GetTestsToPerformByAccount(ctx context.Context, proj
 func (s *DefaultApiService) LogInWithAccount(ctx context.Context, loginAccount LoginAccount) (ImplResponse, error) {
 
 	// create the account
-	account, err := accountServices.GetAccount(loginAccount.EmailAddress, loginAccount.Password, loginAccount.RefreshToken, loginAccount.AccountID, loginAccount.SessionID)
+	account, err := s.getAccountService().GetAccount(&models.EmailAddress{EmailAddress: loginAccount.EmailAddress}, loginAccount.Password, loginAccount.RefreshToken, loginAccount.AccountID, loginAccount.SessionID)
 
 	if err != nil {
 		return Response(http.StatusBadRequest, nil), err
@@ -249,7 +265,7 @@ func (s *DefaultApiService) LogInWithAccount(ctx context.Context, loginAccount L
 	// validate the account is correct
 	if loginAccount.GrantType == "password" {
 		// Validate password and obtain accountID of account
-		accountDAO, validationError := authenticationServices.IsValidPasswordLogin(*account)
+		accountDAO, validationError := s.getAuthService().IsValidPasswordLogin(*account)
 		if validationError != nil {
 			return Response(http.StatusUnauthorized, nil), validationError
 		}
@@ -259,7 +275,7 @@ func (s *DefaultApiService) LogInWithAccount(ctx context.Context, loginAccount L
 		account.AccountType = accountDAO.AccountType
 
 		// Create authentication for account
-		authError := authenticationServices.CreateAccountAuthentication(account)
+		authError := s.getAuthService().CreateAccountAuthentication(account)
 
 		if authError != nil {
 			return Response(http.StatusInternalServerError, nil), authError
@@ -272,13 +288,13 @@ func (s *DefaultApiService) LogInWithAccount(ctx context.Context, loginAccount L
 			return Response(http.StatusBadRequest, nil), errors.New("Invalid account ID")
 		}
 
-		validationError := authenticationServices.IsValidTokenLogin(account.RefreshToken, account.AccountID, account.SessionID, loginAccount.GrantType)
+		validationError := s.getAuthService().IsValidTokenLogin(account.RefreshToken, account.AccountID, account.SessionID, loginAccount.GrantType)
 		if validationError != nil {
 			return Response(http.StatusUnauthorized, nil), validationError
 		}
 
 		// Create new authtoken for account
-		newAuthToken, authError := authenticationServices.UpdateAccountAuthentication(account.AccountID, account.SessionID)
+		newAuthToken, authError := s.getAuthService().UpdateAccountAuthentication(account.AccountID, account.SessionID)
 		if authError != nil {
 			return Response(http.StatusInternalServerError, nil), authError
 		}
@@ -297,13 +313,13 @@ func (s *DefaultApiService) LogOutWithAccount(ctx context.Context, logoutAccount
 		return Response(http.StatusBadRequest, nil), errors.New("Invalid uuid")
 	}
 
-	err1 := authenticationServices.IsValidTokenLogin(logoutAccount.AccessToken, logoutAccount.AccountID, logoutAccount.SessionID, "authToken")
+	err1 := s.getAuthService().IsValidTokenLogin(logoutAccount.AccessToken, logoutAccount.AccountID, logoutAccount.SessionID, "authToken")
 
 	if err1 != nil {
 		return Response(http.StatusUnauthorized, nil), err1
 	}
 
-	err := authenticationServices.LogOutWithAccount(logoutAccount.SessionID, logoutAccount.AccountID, logoutAccount.AccessToken)
+	err := s.getAuthService().LogOutWithAccount(logoutAccount.SessionID, logoutAccount.AccountID, logoutAccount.AccessToken)
 
 	if err != nil {
 		return Response(http.StatusInternalServerError, nil), err
@@ -319,13 +335,13 @@ func (s *DefaultApiService) RefreshAccessToken(ctx context.Context, refreshDetai
 		return Response(http.StatusBadRequest, nil), errors.New("Invalid uuid")
 	}
 
-	err1 := authenticationServices.IsValidTokenLogin(refreshDetails.RefreshToken, refreshDetails.AccountID, refreshDetails.SessionID, "refreshToken")
+	err1 := s.getAuthService().IsValidTokenLogin(refreshDetails.RefreshToken, refreshDetails.AccountID, refreshDetails.SessionID, "refreshToken")
 
 	if err1 != nil {
 		return Response(http.StatusUnauthorized, nil), err1
 	}
 
-	newAuthToken, err := authenticationServices.RefreshAccessToken(refreshDetails.AccountID, refreshDetails.SessionID, refreshDetails.RefreshToken)
+	newAuthToken, err := s.getAuthService().RefreshAccessToken(refreshDetails.AccountID, refreshDetails.SessionID, refreshDetails.RefreshToken)
 
 	if err != nil {
 		return Response(http.StatusInternalServerError, nil), err
@@ -357,7 +373,7 @@ func (s *DefaultApiService) SubmitAnswerToTest(ctx context.Context, projectID st
 			})
 	}
 
-	err := projectServices.StoreTestAnswers(projectID, testID, genericTestAnswers.AccountID, submittedAnswers)
+	err := s.getProjectService().StoreTestAnswers(projectID, testID, genericTestAnswers.AccountID, submittedAnswers)
 
 	if err != nil {
 		return Response(http.StatusInternalServerError, nil), nil

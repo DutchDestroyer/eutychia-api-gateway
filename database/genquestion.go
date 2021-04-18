@@ -16,8 +16,14 @@ var questions []GenericQuestionDAO = []GenericQuestionDAO{
 	{"dc919c8d-93fa-4f69-8086-e2395b9d01e2", "Is this a question 2?", "slider", []string{"strongly disagree", "disagree", "neutral", "agree", "strongly agree"}},
 }
 
+type IGenQuestionDBService interface {
+	GetQuestionsPerID([]string) ([]GenericQuestionDAO, error)
+}
+
+type GenQuestionDBService struct{}
+
 // GetQuestionsPerID returns all questions with a specific ID
-func GetQuestionsPerID(questionIDs []string) ([]GenericQuestionDAO, error) {
+func (g *GenQuestionDBService) GetQuestionsPerID(questionIDs []string) ([]GenericQuestionDAO, error) {
 	var selectedQuestions []GenericQuestionDAO
 
 	for i := range questions {
@@ -29,7 +35,7 @@ func GetQuestionsPerID(questionIDs []string) ([]GenericQuestionDAO, error) {
 	}
 
 	if len(selectedQuestions) != len(questionIDs) {
-		return []GenericQuestionDAO{}, errors.New("Number of required questions differs from number of expected questions")
+		return []GenericQuestionDAO{}, errors.New("number of required questions differs from number of expected questions")
 	}
 
 	return selectedQuestions, nil

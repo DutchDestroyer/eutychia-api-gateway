@@ -28,9 +28,20 @@ var accountDatabase []AccountDAO = []AccountDAO{
 	},
 }
 
+type IAccountDBService interface {
+	CreateInitialParticipantAccount(string, string, string) (string, error)
+	FinalizeAccountCreation(string, []byte) error
+	GetDatabaseEntry(string) (AccountDAO, error)
+	GetDatabaseEntryBasedOnMail(string) (AccountDAO, error)
+	GetProjectIDsAsParticipantForAccount(string) ([]string, error)
+	GetProjectIDsAsResearcherForAccount(string) ([]string, error)
+}
+
+type AccountDBService struct{}
+
 // CreateInitialParticipantAccount creates the participant when the participant is for the first time added
 // by a researcher for a project. This participant hasn't confirmed it's account yet, so has no password
-func CreateInitialParticipantAccount(firstName string, lastName string, emailAddress string) (string, error) {
+func (a *AccountDBService) CreateInitialParticipantAccount(firstName string, lastName string, emailAddress string) (string, error) {
 	accountID := uuid.New().String()
 
 	accountDatabase = append(accountDatabase, AccountDAO{
@@ -41,7 +52,7 @@ func CreateInitialParticipantAccount(firstName string, lastName string, emailAdd
 }
 
 // FinalizeAccountCreation
-func FinalizeAccountCreation(accountID string, encryptedpassword []byte) error {
+func (a *AccountDBService) FinalizeAccountCreation(accountID string, encryptedpassword []byte) error {
 	for i := range accountDatabase {
 		if accountDatabase[i].AccountID == accountID {
 			accountDatabase[i].Password = string(encryptedpassword)
@@ -49,31 +60,31 @@ func FinalizeAccountCreation(accountID string, encryptedpassword []byte) error {
 		}
 	}
 
-	return errors.New("Account not found")
+	return errors.New("account not found")
 }
 
 // GetDatabaseEntry gets an entry from the database
-func GetDatabaseEntry(accountID string) (AccountDAO, error) {
+func (a *AccountDBService) GetDatabaseEntry(accountID string) (AccountDAO, error) {
 	for i := range accountDatabase {
 		if accountDatabase[i].AccountID == accountID {
 			return accountDatabase[i], nil
 		}
 	}
-	return AccountDAO{}, errors.New("Not found")
+	return AccountDAO{}, errors.New("not found")
 }
 
 // GetDatabaseEntryBasedOnMail when user logs in, id is not known
-func GetDatabaseEntryBasedOnMail(username string) (AccountDAO, error) {
+func (a *AccountDBService) GetDatabaseEntryBasedOnMail(username string) (AccountDAO, error) {
 	for i := range accountDatabase {
 		if accountDatabase[i].EmailAddress == username {
 			return accountDatabase[i], nil
 		}
 	}
-	return AccountDAO{}, errors.New("Not found")
+	return AccountDAO{}, errors.New("not found")
 }
 
 //GetProjectIDsAsParticipantForAccount gets the projects where the account is a participant
-func GetProjectIDsAsParticipantForAccount(accountID string) ([]string, error) {
+func (a *AccountDBService) GetProjectIDsAsParticipantForAccount(accountID string) ([]string, error) {
 	for i := range accountDatabase {
 		if accountDatabase[i].AccountID == accountID {
 			return accountDatabase[i].ProjectsAsParticipant, nil
@@ -83,7 +94,7 @@ func GetProjectIDsAsParticipantForAccount(accountID string) ([]string, error) {
 }
 
 //GetProjectIDsAsResearcherForAccount gets the projects where the account is a researcher
-func GetProjectIDsAsResearcherForAccount(accountID string) ([]string, error) {
+func (a *AccountDBService) GetProjectIDsAsResearcherForAccount(accountID string) ([]string, error) {
 	for i := range accountDatabase {
 		if accountDatabase[i].AccountID == accountID {
 			return accountDatabase[i].ProjectsAsResearcher, nil

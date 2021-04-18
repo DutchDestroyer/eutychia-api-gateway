@@ -1,5 +1,6 @@
 package services_test
 
+/*
 import (
 	"errors"
 	"testing"
@@ -59,4 +60,4 @@ func TestCreateAccountWithInvalidEmailAddress(t *testing.T) {
 	tests.CompareStrings(t, account.SessionID, "")
 	tests.CompareStrings(t, account.AuthToken, "")
 	tests.CompareStrings(t, account.AccountType, "")
-}
+}*/

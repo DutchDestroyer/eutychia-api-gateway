@@ -16,24 +16,41 @@ import (
 
 	"github.com/DutchDestroyer/eutychia-api-gateway/models"
 
-	"github.com/DutchDestroyer/eutychia-api-gateway/database"
+	accountDB "github.com/DutchDestroyer/eutychia-api-gateway/database"
+	authDB "github.com/DutchDestroyer/eutychia-api-gateway/database"
 )
 
+type IAuthenticationService interface {
+	CreateAccountAuthentication(*models.Account) error
+	UpdateAccountAuthentication(string, string) (string, error)
+	LogOutWithAccount(string, string, string) error
+	IsValidPasswordLogin(models.Account) (accountDB.AccountDAO, error)
+	RefreshAccessToken(string, string, string) (string, error)
+	IsValidTokenLogin(string, string, string, string) error
+
+	encryptPassword(string) ([]byte, error)
+
+	getAuthDBService() authDB.IAuthenticationDBService
+	getAccountDBService() accountDB.IAccountDBService
+}
+
+type AuthenticationService struct{}
+
 // CreateAccountAuthentication create authentication of the account
-func CreateAccountAuthentication(account *models.Account) error {
+func (a *AuthenticationService) CreateAccountAuthentication(account *models.Account) error {
 	sessionID := uuid.New().String()
 
-	authToken, authTokenKey, authErr := createAuthToken(account.AccountID, sessionID)
+	authToken, authTokenKey, authErr := a.createAuthToken(account.AccountID, sessionID)
 	if authErr != nil {
 		return authErr
 	}
 
-	refreshToken, refreshTokenKey, refreshErr := createRefreshToken(account.AccountID, sessionID)
+	refreshToken, refreshTokenKey, refreshErr := a.createRefreshToken(account.AccountID, sessionID)
 	if refreshErr != nil {
 		return refreshErr
 	}
 
-	dbErr := database.StoreSession(account.AccountID, sessionID, authToken, authTokenKey, refreshToken, refreshTokenKey)
+	dbErr := a.getAuthDBService().StoreSession(account.AccountID, sessionID, authToken, authTokenKey, refreshToken, refreshTokenKey)
 
 	if dbErr != nil {
 		return dbErr
@@ -47,14 +64,14 @@ func CreateAccountAuthentication(account *models.Account) error {
 }
 
 // UpdateAccountAuthentication create authentication of the account when logging in with refreshtoken
-func UpdateAccountAuthentication(accountID string, sessionID string) (string, error) {
+func (a *AuthenticationService) UpdateAccountAuthentication(accountID string, sessionID string) (string, error) {
 
-	authToken, authTokenKey, authErr := createAuthToken(accountID, sessionID)
+	authToken, authTokenKey, authErr := a.createAuthToken(accountID, sessionID)
 	if authErr != nil {
 		return "", authErr
 	}
 
-	dbErr := database.UpdateSessionAuthToken(accountID, sessionID, authToken, authTokenKey)
+	dbErr := a.getAuthDBService().UpdateSessionAuthToken(accountID, sessionID, authToken, authTokenKey)
 	if dbErr != nil {
 		return "", dbErr
 	}
@@ -63,39 +80,37 @@ func UpdateAccountAuthentication(accountID string, sessionID string) (string, er
 }
 
 //LogOutWithAccount logs out the provided session of the provided account
-func LogOutWithAccount(sessionID string, accountID string, accessToken string) error {
-	return database.RemoveSession(accountID, sessionID)
+func (a *AuthenticationService) LogOutWithAccount(sessionID string, accountID string, accessToken string) error {
+	return a.getAuthDBService().RemoveSession(accountID, sessionID)
 }
 
 // IsValidPasswordLogin validates password
-func IsValidPasswordLogin(acc models.Account) (database.AccountDAO, error) {
+func (a *AuthenticationService) IsValidPasswordLogin(acc models.Account) (accountDB.AccountDAO, error) {
 
-	emailAddress := models.EmailAddress(acc.Username)
-
-	emailValidation := emailAddress.IsValidEmailAddress()
+	emailValidation := acc.Username.IsValidEmailAddress()
 
 	if emailValidation != nil {
-		return database.AccountDAO{}, emailValidation
+		return accountDB.AccountDAO{}, emailValidation
 	}
 
 	// Find email address in db
-	accountDAO, errDAO := database.GetDatabaseEntryBasedOnMail(emailAddress.EmailAddress)
+	accountDAO, errDAO := a.getAccountDBService().GetDatabaseEntryBasedOnMail(acc.Username.GetEmailAddress().EmailAddress)
 
 	if errDAO != nil {
-		return database.AccountDAO{}, errDAO
+		return accountDB.AccountDAO{}, errDAO
 	}
 
 	log.Printf(accountDAO.Password)
 
-	if isValidPassword([]byte(accountDAO.Password), []byte(acc.Password)) {
+	if a.isValidPassword([]byte(accountDAO.Password), []byte(acc.Password)) {
 		return accountDAO, nil
 	}
 
-	return database.AccountDAO{}, errors.New("Invalid email password combination")
+	return accountDB.AccountDAO{}, errors.New("Invalid email password combination")
 }
 
-func RefreshAccessToken(accountID string, sessionID string, refreshToken string) (string, error) {
-	newAuthToken, err2 := UpdateAccountAuthentication(accountID, sessionID)
+func (a *AuthenticationService) RefreshAccessToken(accountID string, sessionID string, refreshToken string) (string, error) {
+	newAuthToken, err2 := a.UpdateAccountAuthentication(accountID, sessionID)
 
 	if err2 != nil {
 		return "", nil
@@ -105,9 +120,9 @@ func RefreshAccessToken(accountID string, sessionID string, refreshToken string)
 }
 
 // IsValidTokenLogin validates the token
-func IsValidTokenLogin(token string, accountID string, sessionID string, tokenType string) error {
+func (a *AuthenticationService) IsValidTokenLogin(token string, accountID string, sessionID string, tokenType string) error {
 
-	sessionData, errDB := database.GetSessionData(accountID, sessionID)
+	sessionData, errDB := a.getAuthDBService().GetSessionData(accountID, sessionID)
 
 	if errDB != nil {
 		return errDB
@@ -128,16 +143,24 @@ func IsValidTokenLogin(token string, accountID string, sessionID string, tokenTy
 	return err
 }
 
-func createAuthToken(accountID string, sessionID string) (string, rsa.PublicKey, error) {
-	return createToken(accountID, sessionID, time.Duration(time.Duration.Minutes(15)))
+func (a *AuthenticationService) getAuthDBService() authDB.IAuthenticationDBService {
+	return &authDB.AuthenticationDBService{}
 }
 
-func createRefreshToken(accountID string, sessionID string) (string, rsa.PublicKey, error) {
-	return createToken(accountID, sessionID, time.Duration(time.Duration.Hours(24)))
+func (a *AuthenticationService) getAccountDBService() accountDB.IAccountDBService {
+	return &accountDB.AccountDBService{}
+}
+
+func (a *AuthenticationService) createAuthToken(accountID string, sessionID string) (string, rsa.PublicKey, error) {
+	return a.createToken(accountID, sessionID, time.Duration(time.Duration.Minutes(15)))
+}
+
+func (a *AuthenticationService) createRefreshToken(accountID string, sessionID string) (string, rsa.PublicKey, error) {
+	return a.createToken(accountID, sessionID, time.Duration(time.Duration.Hours(24)))
 }
 
 // createToken Creates a token with a specific time
-func createToken(accountID string, sessionID string, timespan time.Duration) (string, rsa.PublicKey, error) {
+func (a *AuthenticationService) createToken(accountID string, sessionID string, timespan time.Duration) (string, rsa.PublicKey, error) {
 	alg := jwa.RS256
 	key, errGenerate := rsa.GenerateKey(rand.Reader, 2048)
 	if errGenerate != nil {
@@ -160,7 +183,7 @@ func createToken(accountID string, sessionID string, timespan time.Duration) (st
 }
 
 //encryptPassword encrypts a password
-func encryptPassword(password string) ([]byte, error) {
+func (a *AuthenticationService) encryptPassword(password string) ([]byte, error) {
 	pw, err1 := bcrypt.GenerateFromPassword([]byte(password), bcrypt.MinCost)
 
 	if err1 != nil {
@@ -170,7 +193,7 @@ func encryptPassword(password string) ([]byte, error) {
 	return pw, nil
 }
 
-func isValidPassword(dbPassword []byte, givenPassword []byte) bool {
+func (a *AuthenticationService) isValidPassword(dbPassword []byte, givenPassword []byte) bool {
 	err := bcrypt.CompareHashAndPassword(dbPassword, givenPassword)
 
 	return err == nil
