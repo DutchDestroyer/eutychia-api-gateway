@@ -14,10 +14,13 @@ import (
 	"net/http"
 
 	openapi "github.com/DutchDestroyer/eutychia-api-gateway/go"
+	"github.com/DutchDestroyer/eutychia-api-gateway/resources/postgres"
 )
 
 func main() {
 	log.Printf("Server started")
+
+	postgres.InitDB()
 
 	DefaultApiService := openapi.NewDefaultApiService()
 	DefaultApiController := openapi.NewDefaultApiController(DefaultApiService)
