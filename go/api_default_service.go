@@ -14,6 +14,7 @@ import (
 	"errors"
 	"net/http"
 
+	"github.com/DutchDestroyer/eutychia-api-gateway/database"
 	"github.com/DutchDestroyer/eutychia-api-gateway/models"
 	"github.com/DutchDestroyer/eutychia-api-gateway/services"
 )
@@ -30,23 +31,40 @@ func NewDefaultApiService() DefaultApiServicer {
 }
 
 func (s *DefaultApiService) getAccountService() services.IAccountService {
-	return &services.AccountService{}
+	return &services.AccountService{
+		AccDBService: &database.AccountDBService{},
+		AuthService:  s.getAuthService(),
+	}
 }
 
 func (s *DefaultApiService) getAuthService() services.IAuthenticationService {
-	return &services.AuthenticationService{}
+	return &services.AuthenticationService{
+		AuthDBService:    &database.AuthenticationDBService{},
+		AccountDBService: &database.AccountDBService{},
+	}
 }
 
 func (s *DefaultApiService) getGenTestService() services.IGenTestService {
-	return &services.GenTestService{}
+	return &services.GenTestService{
+		GenTestDBService:     &database.GenericTestDBService{},
+		ProjectDBService:     &database.ProjectDBService{},
+		GenQuestionDBService: &database.GenQuestionDBService{},
+	}
 }
 
 func (s *DefaultApiService) getParticipantService() services.IParticipantService {
-	return &services.ParticipantService{}
+	return &services.ParticipantService{
+		AccountDBService: &database.AccountDBService{},
+	}
 }
 
 func (s *DefaultApiService) getProjectService() services.IProjectService {
-	return &services.ProjectService{}
+	return &services.ProjectService{
+		ParticipantService:    s.getParticipantService(),
+		AccountDBService:      &database.AccountDBService{},
+		ProjectDBService:      &database.ProjectDBService{},
+		StoredAnswerDBService: &database.SubmittedAnswerDBService{},
+	}
 }
 
 //GetAllTests

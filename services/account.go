@@ -3,7 +3,7 @@ package services
 import (
 	"errors"
 
-	accountDB "github.com/DutchDestroyer/eutychia-api-gateway/database"
+	"github.com/DutchDestroyer/eutychia-api-gateway/database"
 	models "github.com/DutchDestroyer/eutychia-api-gateway/models"
 )
 
@@ -14,7 +14,7 @@ type IAccountService interface {
 }
 
 type AccountService struct {
-	AccDBService accountDB.IAccountDBService
+	AccDBService database.IAccountDBService
 	AuthService  IAuthenticationService
 }
 
