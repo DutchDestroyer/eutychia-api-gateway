@@ -11,18 +11,11 @@ type IAccountService interface {
 	GetAccount(models.IEmailAddress, string, string, string, string) (*models.Account, error)
 	FinaleAccountCreation(string, string, string, string, string) (bool, error)
 	IsResearcherAccount(string) (bool, error)
-	getAccDBService() accountDB.IAccountDBService
-	getAuthService() IAuthenticationService
 }
 
-type AccountService struct{}
-
-func (a AccountService) getAccDBService() accountDB.IAccountDBService {
-	return &accountDB.AccountDBService{}
-}
-
-func (a AccountService) getAuthService() IAuthenticationService {
-	return &AuthenticationService{}
+type AccountService struct {
+	AccDBService accountDB.IAccountDBService
+	AuthService  IAuthenticationService
 }
 
 //GetAccount creates an account after making an http request after logging in
@@ -51,13 +44,13 @@ func (a AccountService) FinaleAccountCreation(accountID string, emailAddress str
 		return isNew, err1
 	}
 
-	encPW, err2 := a.getAuthService().encryptPassword(password)
+	encPW, err2 := a.AuthService.encryptPassword(password)
 
 	if err2 != nil {
 		return isNew, err2
 	}
 
-	err3 := a.getAccDBService().FinalizeAccountCreation(accountID, encPW)
+	err3 := a.AccDBService.FinalizeAccountCreation(accountID, encPW)
 
 	return isNew, err3
 }
@@ -65,7 +58,7 @@ func (a AccountService) FinaleAccountCreation(accountID string, emailAddress str
 // IsResearcherAccount determines whether the account is a researcher account, which means it has certain admin rights
 func (a AccountService) IsResearcherAccount(accountID string) (bool, error) {
 
-	acc, err1 := a.getAccDBService().GetDatabaseEntry(accountID)
+	acc, err1 := a.AccDBService.GetDatabaseEntry(accountID)
 
 	if err1 != nil {
 		return false, err1
@@ -76,7 +69,7 @@ func (a AccountService) IsResearcherAccount(accountID string) (bool, error) {
 
 func (a AccountService) isNewAccount(accountID string, emailAddress string, firstName string, lastName string) (bool, error) {
 
-	account, err := a.getAccDBService().GetDatabaseEntry(accountID)
+	account, err := a.AccDBService.GetDatabaseEntry(accountID)
 
 	if err != nil {
 		return true, err

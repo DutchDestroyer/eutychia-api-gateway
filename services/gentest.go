@@ -12,21 +12,22 @@ type IGenTestService interface {
 	GetAllGenericTests() ([]models.GenericTestOverview, error)
 	GetTestsOfProject(string) ([]models.GenericTestOverview, error)
 	GetTestData(string, string) (models.GenericTestData, error)
-	getGenTestDBService() database.IGenericTestDBService
-	getProjectDBService() database.IProjectDBService
-	getGenQuestionDBService() database.IGenQuestionDBService
 }
 
-type GenTestService struct{}
+type GenTestService struct {
+	GenTestDBService     database.IGenericTestDBService
+	ProjectDBService     database.IProjectDBService
+	GenQuestionDBService database.IGenQuestionDBService
+}
 
 // GetAllGenericTests gets all generic tests that are in the database
 func (g *GenTestService) GetAllGenericTests() ([]models.GenericTestOverview, error) {
-	return g.getGenTestDBService().GetAllGenericTests()
+	return g.GenTestDBService.GetAllGenericTests()
 }
 
 // GetTestsOfProject gets all the tests of a project
 func (g *GenTestService) GetTestsOfProject(projectID string) ([]models.GenericTestOverview, error) {
-	projects, errGetProjects := g.getProjectDBService().GetProjects([]string{projectID})
+	projects, errGetProjects := g.ProjectDBService.GetProjects([]string{projectID})
 
 	if errGetProjects != nil {
 		return []models.GenericTestOverview{}, errGetProjects
@@ -38,7 +39,7 @@ func (g *GenTestService) GetTestsOfProject(projectID string) ([]models.GenericTe
 		testIDs = append(testIDs, projects[i].TestIDs...)
 	}
 
-	tests, errGetTests := g.getGenTestDBService().GetTestsOfIDs(testIDs)
+	tests, errGetTests := g.GenTestDBService.GetTestsOfIDs(testIDs)
 
 	if errGetTests != nil {
 		return []models.GenericTestOverview{}, errGetTests
@@ -54,7 +55,7 @@ func (g *GenTestService) GetTestsOfProject(projectID string) ([]models.GenericTe
 }
 
 func (g *GenTestService) GetTestData(projectID string, testID string) (models.GenericTestData, error) {
-	testData, err1 := g.getGenTestDBService().GetTestsOfIDs([]string{testID})
+	testData, err1 := g.GenTestDBService.GetTestsOfIDs([]string{testID})
 
 	if err1 != nil {
 		return models.GenericTestData{}, err1
@@ -64,7 +65,7 @@ func (g *GenTestService) GetTestData(projectID string, testID string) (models.Ge
 		return models.GenericTestData{}, errors.New("Size of array was unexpected, size is " + strconv.Itoa(len(testData)) + " instead of 1")
 	}
 
-	var questionsDAO, err2 = g.getGenQuestionDBService().GetQuestionsPerID(testData[0].QuestionIDs)
+	var questionsDAO, err2 = g.GenQuestionDBService.GetQuestionsPerID(testData[0].QuestionIDs)
 
 	if err2 != nil {
 		return models.GenericTestData{}, err2
@@ -93,16 +94,4 @@ func (g *GenTestService) GetTestData(projectID string, testID string) (models.Ge
 		DisplayAnswers: testData[0].DisplayAnswers,
 		FinalRemark:    testData[0].FinalRemark,
 		Questions:      questions}, nil
-}
-
-func (g *GenTestService) getGenTestDBService() database.IGenericTestDBService {
-	return &database.GenericTestDBService{}
-}
-
-func (g *GenTestService) getProjectDBService() database.IProjectDBService {
-	return &database.ProjectDBService{}
-}
-
-func (g *GenTestService) getGenQuestionDBService() database.IGenQuestionDBService {
-	return &database.GenQuestionDBService{}
 }

@@ -14,27 +14,25 @@ import (
 	"github.com/lestrrat-go/jwx/jwt"
 	"golang.org/x/crypto/bcrypt"
 
+	"github.com/DutchDestroyer/eutychia-api-gateway/database"
 	"github.com/DutchDestroyer/eutychia-api-gateway/models"
-
-	accountDB "github.com/DutchDestroyer/eutychia-api-gateway/database"
-	authDB "github.com/DutchDestroyer/eutychia-api-gateway/database"
 )
 
 type IAuthenticationService interface {
 	CreateAccountAuthentication(*models.Account) error
 	UpdateAccountAuthentication(string, string) (string, error)
 	LogOutWithAccount(string, string, string) error
-	IsValidPasswordLogin(models.Account) (accountDB.AccountDAO, error)
+	IsValidPasswordLogin(models.Account) (database.AccountDAO, error)
 	RefreshAccessToken(string, string, string) (string, error)
 	IsValidTokenLogin(string, string, string, string) error
 
 	encryptPassword(string) ([]byte, error)
-
-	getAuthDBService() authDB.IAuthenticationDBService
-	getAccountDBService() accountDB.IAccountDBService
 }
 
-type AuthenticationService struct{}
+type AuthenticationService struct {
+	AuthDBService    database.IAuthenticationDBService
+	AccountDBService database.IAccountDBService
+}
 
 // CreateAccountAuthentication create authentication of the account
 func (a *AuthenticationService) CreateAccountAuthentication(account *models.Account) error {
@@ -50,7 +48,7 @@ func (a *AuthenticationService) CreateAccountAuthentication(account *models.Acco
 		return refreshErr
 	}
 
-	dbErr := a.getAuthDBService().StoreSession(account.AccountID, sessionID, authToken, authTokenKey, refreshToken, refreshTokenKey)
+	dbErr := a.AuthDBService.StoreSession(account.AccountID, sessionID, authToken, authTokenKey, refreshToken, refreshTokenKey)
 
 	if dbErr != nil {
 		return dbErr
@@ -71,7 +69,7 @@ func (a *AuthenticationService) UpdateAccountAuthentication(accountID string, se
 		return "", authErr
 	}
 
-	dbErr := a.getAuthDBService().UpdateSessionAuthToken(accountID, sessionID, authToken, authTokenKey)
+	dbErr := a.AuthDBService.UpdateSessionAuthToken(accountID, sessionID, authToken, authTokenKey)
 	if dbErr != nil {
 		return "", dbErr
 	}
@@ -81,23 +79,23 @@ func (a *AuthenticationService) UpdateAccountAuthentication(accountID string, se
 
 //LogOutWithAccount logs out the provided session of the provided account
 func (a *AuthenticationService) LogOutWithAccount(sessionID string, accountID string, accessToken string) error {
-	return a.getAuthDBService().RemoveSession(accountID, sessionID)
+	return a.AuthDBService.RemoveSession(accountID, sessionID)
 }
 
 // IsValidPasswordLogin validates password
-func (a *AuthenticationService) IsValidPasswordLogin(acc models.Account) (accountDB.AccountDAO, error) {
+func (a *AuthenticationService) IsValidPasswordLogin(acc models.Account) (database.AccountDAO, error) {
 
 	emailValidation := acc.Username.IsValidEmailAddress()
 
 	if emailValidation != nil {
-		return accountDB.AccountDAO{}, emailValidation
+		return database.AccountDAO{}, emailValidation
 	}
 
 	// Find email address in db
-	accountDAO, errDAO := a.getAccountDBService().GetDatabaseEntryBasedOnMail(acc.Username.GetEmailAddress().EmailAddress)
+	accountDAO, errDAO := a.AccountDBService.GetDatabaseEntryBasedOnMail(acc.Username.GetEmailAddress().EmailAddress)
 
 	if errDAO != nil {
-		return accountDB.AccountDAO{}, errDAO
+		return database.AccountDAO{}, errDAO
 	}
 
 	log.Printf(accountDAO.Password)
@@ -106,7 +104,7 @@ func (a *AuthenticationService) IsValidPasswordLogin(acc models.Account) (accoun
 		return accountDAO, nil
 	}
 
-	return accountDB.AccountDAO{}, errors.New("Invalid email password combination")
+	return database.AccountDAO{}, errors.New("Invalid email password combination")
 }
 
 func (a *AuthenticationService) RefreshAccessToken(accountID string, sessionID string, refreshToken string) (string, error) {
@@ -122,7 +120,7 @@ func (a *AuthenticationService) RefreshAccessToken(accountID string, sessionID s
 // IsValidTokenLogin validates the token
 func (a *AuthenticationService) IsValidTokenLogin(token string, accountID string, sessionID string, tokenType string) error {
 
-	sessionData, errDB := a.getAuthDBService().GetSessionData(accountID, sessionID)
+	sessionData, errDB := a.AuthDBService.GetSessionData(accountID, sessionID)
 
 	if errDB != nil {
 		return errDB
@@ -141,14 +139,6 @@ func (a *AuthenticationService) IsValidTokenLogin(token string, accountID string
 	_, err := jwt.Parse([]byte(token), jwt.WithValidate(true), jwt.WithVerify(jwa.RS256, tokenKey))
 
 	return err
-}
-
-func (a *AuthenticationService) getAuthDBService() authDB.IAuthenticationDBService {
-	return &authDB.AuthenticationDBService{}
-}
-
-func (a *AuthenticationService) getAccountDBService() accountDB.IAccountDBService {
-	return &accountDB.AccountDBService{}
 }
 
 func (a *AuthenticationService) createAuthToken(accountID string, sessionID string) (string, rsa.PublicKey, error) {

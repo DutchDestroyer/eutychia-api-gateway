@@ -52,7 +52,7 @@ func (s *DefaultApiService) getProjectService() services.IProjectService {
 //GetAllTests
 func (s *DefaultApiService) GetAllTests(ctx context.Context, accountID string) (ImplResponse, error) {
 	if !services.IsCorrectUUID(accountID) {
-		return Response(http.StatusBadRequest, nil), errors.New("Incorrect data provided by client")
+		return Response(http.StatusBadRequest, nil), errors.New("incorrect data provided by client")
 	}
 
 	isResearcher, err1 := s.getAccountService().IsResearcherAccount(accountID)
@@ -84,7 +84,7 @@ func (s *DefaultApiService) GetAllTests(ctx context.Context, accountID string) (
 func (s *DefaultApiService) CreatesNewProject(ctx context.Context, accountID string, createProject CreateProject) (ImplResponse, error) {
 	// TODO - update CreateNewAccount with the required logic for this service method.
 	if !services.IsCorrectUUID(accountID) {
-		return Response(http.StatusBadRequest, nil), errors.New("Incorrect data provided by client")
+		return Response(http.StatusBadRequest, nil), errors.New("incorrect data provided by client")
 	}
 
 	isResearcher, err1 := s.getAccountService().IsResearcherAccount(accountID)
@@ -150,7 +150,7 @@ func (s *DefaultApiService) FinalizeAccountCreation(ctx context.Context, account
 
 	if !isNewAccount {
 		// This should never happen!!!
-		return Response(http.StatusUnauthorized, nil), errors.New("Invalid")
+		return Response(http.StatusUnauthorized, nil), errors.New("invalid")
 	}
 
 	return Response(http.StatusOK, nil), nil
@@ -161,7 +161,7 @@ func (s *DefaultApiService) GetAccountByID(ctx context.Context, accountID string
 	// TODO - update GetAccountByID with the required logic for this service method.
 
 	if !services.IsCorrectUUID(accountID) {
-		return Response(http.StatusBadRequest, nil), errors.New("Incorrect data provided by client")
+		return Response(http.StatusBadRequest, nil), errors.New("incorrect data provided by client")
 	}
 
 	//TODO: Uncomment the next line to return response Response(400, {}) or use other options such as http.Ok ...
@@ -181,7 +181,7 @@ func (s *DefaultApiService) GetGenericTestOfProject(ctx context.Context, project
 	// TODO - update GetGenericTestOfProject with the required logic for this service method.
 
 	if !services.IsCorrectUUID(projectID) || !services.IsCorrectUUID(testID) {
-		return Response(http.StatusBadRequest, nil), errors.New("Incorrect data provided by client")
+		return Response(http.StatusBadRequest, nil), errors.New("incorrect data provided by client")
 	}
 
 	test, err := s.getGenTestService().GetTestData(projectID, testID)
@@ -212,7 +212,7 @@ func (s *DefaultApiService) GetProjectsOfAccount(ctx context.Context, accountID 
 	// TODO - update GetProjectsOfAccount with the required logic for this service method.
 
 	if !services.IsCorrectUUID(accountID) {
-		return Response(http.StatusBadRequest, nil), errors.New("Incorrect data provided by client")
+		return Response(http.StatusBadRequest, nil), errors.New("incorrect data provided by client")
 	}
 
 	projects, err := s.getProjectService().GetProjectsAsParticipantForAccount(accountID)
@@ -234,7 +234,7 @@ func (s *DefaultApiService) GetProjectsOfAccount(ctx context.Context, accountID 
 func (s *DefaultApiService) GetTestsToPerformByAccount(ctx context.Context, projectID string, accountID string) (ImplResponse, error) {
 
 	if !services.IsCorrectUUID(projectID) || !services.IsCorrectUUID(accountID) {
-		return Response(http.StatusBadRequest, nil), errors.New("Incorrect data provided by client")
+		return Response(http.StatusBadRequest, nil), errors.New("incorrect data provided by client")
 	}
 
 	tests, errTests := s.getGenTestService().GetTestsOfProject(projectID)
@@ -285,7 +285,7 @@ func (s *DefaultApiService) LogInWithAccount(ctx context.Context, loginAccount L
 			AccountDetails{account.AccountID, account.SessionID, account.AuthToken, account.RefreshToken, account.AccountType}), nil
 	} else if loginAccount.GrantType == "refreshToken" {
 		if !services.IsCorrectUUID(loginAccount.AccountID) {
-			return Response(http.StatusBadRequest, nil), errors.New("Invalid account ID")
+			return Response(http.StatusBadRequest, nil), errors.New("invalid account ID")
 		}
 
 		validationError := s.getAuthService().IsValidTokenLogin(account.RefreshToken, account.AccountID, account.SessionID, loginAccount.GrantType)
@@ -310,7 +310,7 @@ func (s *DefaultApiService) LogInWithAccount(ctx context.Context, loginAccount L
 func (s *DefaultApiService) LogOutWithAccount(ctx context.Context, logoutAccount LogoutAccount) (ImplResponse, error) {
 
 	if services.IsCorrectUUID(logoutAccount.AccountID) || services.IsCorrectUUID(logoutAccount.SessionID) {
-		return Response(http.StatusBadRequest, nil), errors.New("Invalid uuid")
+		return Response(http.StatusBadRequest, nil), errors.New("invalid uuid")
 	}
 
 	err1 := s.getAuthService().IsValidTokenLogin(logoutAccount.AccessToken, logoutAccount.AccountID, logoutAccount.SessionID, "authToken")
@@ -332,7 +332,7 @@ func (s *DefaultApiService) LogOutWithAccount(ctx context.Context, logoutAccount
 func (s *DefaultApiService) RefreshAccessToken(ctx context.Context, refreshDetails RefreshDetails) (ImplResponse, error) {
 
 	if !services.IsCorrectUUID(refreshDetails.AccountID) || !services.IsCorrectUUID(refreshDetails.SessionID) {
-		return Response(http.StatusBadRequest, nil), errors.New("Invalid uuid")
+		return Response(http.StatusBadRequest, nil), errors.New("invalid uuid")
 	}
 
 	err1 := s.getAuthService().IsValidTokenLogin(refreshDetails.RefreshToken, refreshDetails.AccountID, refreshDetails.SessionID, "refreshToken")
@@ -355,11 +355,11 @@ func (s *DefaultApiService) SubmitAnswerToTest(ctx context.Context, projectID st
 	// TODO - update SubmitAnswerToTest with the required logic for this service method.
 
 	if !services.IsCorrectUUID(projectID) || !services.IsCorrectUUID(testID) || !services.IsCorrectUUID(genericTestAnswers.AccountID) {
-		return Response(http.StatusBadRequest, nil), errors.New("Incorrect data provided by client")
+		return Response(http.StatusBadRequest, nil), errors.New("incorrect data provided by client")
 	}
 
 	if len(genericTestAnswers.Answers) < 1 {
-		return Response(http.StatusBadRequest, nil), errors.New("No answers provided")
+		return Response(http.StatusBadRequest, nil), errors.New("no answers provided")
 	}
 
 	var submittedAnswers []models.SubmittedAnswers
