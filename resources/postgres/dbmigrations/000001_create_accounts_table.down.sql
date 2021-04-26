@@ -1,0 +1,6 @@
+BEGIN;
+
+DROP TABLE IF EXISTS accounts;
+DROP TYPE IF EXISTS enum_account_type;
+
+COMMIT;

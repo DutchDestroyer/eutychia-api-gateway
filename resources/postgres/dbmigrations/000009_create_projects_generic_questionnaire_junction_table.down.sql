@@ -1,0 +1,1 @@
+DROP TABLE IF EXISTS projects_generic_questionnaire_junction;
