@@ -104,7 +104,7 @@ func (a *AuthenticationService) IsValidPasswordLogin(acc models.Account) (databa
 		return accountDAO, nil
 	}
 
-	return database.AccountDAO{}, errors.New("Invalid email password combination")
+	return database.AccountDAO{}, errors.New("invalid email password combination")
 }
 
 func (a *AuthenticationService) RefreshAccessToken(accountID string, sessionID string, refreshToken string) (string, error) {

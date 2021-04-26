@@ -72,7 +72,7 @@ func (g *GenTestService) GetTestData(projectID string, testID string) (models.Ge
 	}
 
 	if len(questionsDAO) == 0 {
-		return models.GenericTestData{}, errors.New("No questions found")
+		return models.GenericTestData{}, errors.New("no questions found")
 	}
 
 	var questions []models.GenericQuestion

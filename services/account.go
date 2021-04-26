@@ -80,7 +80,7 @@ func (a AccountService) isNewAccount(accountID string, emailAddress string, firs
 	}
 
 	if account.Password != "" {
-		return false, errors.New("Password has already been created")
+		return false, errors.New("password has already been created")
 	}
 
 	return true, nil

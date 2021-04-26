@@ -10,8 +10,11 @@ import (
 type AccountDAO struct {
 	AccountID             string
 	FirstName             string
+	NonceFirstName        string
 	LastName              string
+	NonceLastName         string
 	EmailAddress          string
+	NonceEmailAddress     string
 	Password              string
 	AccountType           string
 	ProjectsAsResearcher  []string // Only the IDs are stored here
@@ -19,17 +22,17 @@ type AccountDAO struct {
 }
 
 var accountDatabase []AccountDAO = []AccountDAO{
-	{"683c5de1-5172-4a94-bd3b-2d4bf58b6b72", "Mark1", "Wijnbergen1", "mark.wijnbergen@hey.com", "$2a$04$cR6VcDXU4cSk0gSd1Hmr4euIfZxcYWunEUs1iMZu29JXeWOUN5O1m", "researcher",
+	/*{"683c5de1-5172-4a94-bd3b-2d4bf58b6b72", "Mark1", "Wijnbergen1", "mark.wijnbergen@hey.com", "$2a$04$cR6VcDXU4cSk0gSd1Hmr4euIfZxcYWunEUs1iMZu29JXeWOUN5O1m", "researcher",
 		[]string{"497aeeaf-0d41-46c4-a5a1-8a88c7b61807", "497aeeaf-0d41-46c4-a5a1-8a88c7b61808", "497aeeaf-0d41-46c4-a5a1-8a88c7b61809"},
 		[]string{"497aeeaf-0d41-46c4-a5a1-8a88c7b61807", "497aeeaf-0d41-46c4-a5a1-8a88c7b61808", "497aeeaf-0d41-46c4-a5a1-8a88c7b61809"}},
 	{"683c5de1-5172-4a94-bd3b-2d4bf58b6b73", "Mark2", "Wijnbergen2", "wijnbergenmark@gmail.com", "$2a$04$cR6VcDXU4cSk0gSd1Hmr4euIfZxcYWunEUs1iMZu29JXeWOUN5O1m", "participant",
 		[]string{},
 		[]string{"497aeeaf-0d41-46c4-a5a1-8a88c7b61807", "497aeeaf-0d41-46c4-a5a1-8a88c7b61808"},
-	},
+	},*/
 }
 
 type IAccountDBService interface {
-	CreateInitialParticipantAccount(string, string, string) (string, error)
+	CreateInitialParticipantAccount(string, string, string, string, string, string) (string, error)
 	FinalizeAccountCreation(string, []byte) error
 	GetDatabaseEntry(string) (AccountDAO, error)
 	GetDatabaseEntryBasedOnMail(string) (AccountDAO, error)
@@ -41,11 +44,18 @@ type AccountDBService struct{}
 
 // CreateInitialParticipantAccount creates the participant when the participant is for the first time added
 // by a researcher for a project. This participant hasn't confirmed it's account yet, so has no password
-func (a *AccountDBService) CreateInitialParticipantAccount(firstName string, lastName string, emailAddress string) (string, error) {
+func (a *AccountDBService) CreateInitialParticipantAccount(
+	firstName string,
+	nonceFirstName string,
+	lastName string,
+	nonceLastName string,
+	emailAddress string,
+	nonceEmailAddress string) (string, error) {
 	accountID := uuid.New().String()
 
 	accountDatabase = append(accountDatabase, AccountDAO{
-		accountID, firstName, lastName, emailAddress, "", "participant", []string{}, []string{},
+		accountID, firstName, nonceFirstName, lastName, nonceLastName,
+		emailAddress, nonceEmailAddress, "", "participant", []string{}, []string{},
 	})
 
 	return accountID, nil

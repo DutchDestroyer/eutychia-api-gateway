@@ -38,8 +38,32 @@ func (p *ParticipantService) LinkParticipantToAccount(emailAddress string, first
 	if err1 != nil {
 		if account.AccountID == "" {
 			// participant is not yet known in database
+
+			// encrypt first name, last name, and email address so PII data is stored anonymous!!
+			// TODO add secret key
+			firstNameEnc, firstNameNonce, err := GetEncryptedData(firstName, "")
+			if err != nil {
+				return "", err
+			}
+
+			lastNameEnc, lastNameNonce, err := GetEncryptedData(lastName, "")
+			if err != nil {
+				return "", err
+			}
+
+			emailAddressEnc, emailAddressNonce, err := GetEncryptedData(emailAddress, "")
+			if err != nil {
+				return "", err
+			}
+
 			// Create the account and send the participant an email so they can sign up
-			accountID, err := p.AccountDBService.CreateInitialParticipantAccount(firstName, lastName, emailAddress)
+			accountID, err := p.AccountDBService.CreateInitialParticipantAccount(
+				firstNameEnc,
+				firstNameNonce,
+				lastNameEnc,
+				lastNameNonce,
+				emailAddressEnc,
+				emailAddressNonce)
 			// Include the newly created accountID in the email, so when the participant signs up via email, it can be linked to the account
 			if err != nil {
 				return "", err
@@ -48,7 +72,7 @@ func (p *ParticipantService) LinkParticipantToAccount(emailAddress string, first
 			// TODO send email that the user should create an account to participate in research
 			sendEmailErr := SendEmail(emailAddress, "test1")
 			if sendEmailErr != nil {
-				// Do something to notify the researcher
+				// TODO do something to notify the researcher
 			}
 
 			return accountID, nil
@@ -63,7 +87,7 @@ func (p *ParticipantService) LinkParticipantToAccount(emailAddress string, first
 	sendEmailErr := SendEmail(emailAddress, "test2")
 
 	if sendEmailErr != nil {
-		// Do something to notify the researcher
+		// TODO do something to notify the researcher
 	}
 
 	// If account already exists, return the AccountID
