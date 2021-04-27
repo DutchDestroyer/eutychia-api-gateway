@@ -3,6 +3,7 @@ package services
 import (
 	"crypto/rand"
 	"crypto/rsa"
+	"database/sql"
 	"log"
 	"time"
 
@@ -19,13 +20,13 @@ import (
 )
 
 type IAuthenticationService interface {
-	CreateAccountAuthentication(*models.Account) error
-	UpdateAccountAuthentication(string, string) (string, error)
+	CreateAccountAuthentication(*models.Account, *sql.Tx) error
+	UpdateAccountAuthentication(string, string, *sql.Tx) (string, error)
 	LogOutWithAccount(string, string, string) error
-	IsValidPasswordLogin(models.Account) (database.AccountDAO, error)
-	RefreshAccessToken(string, string, string) (string, error)
-	IsValidTokenLogin(string, string, string, string) error
-
+	IsValidPasswordLogin(models.Account, *sql.Tx) (database.AccountDAO, error)
+	RefreshAccessToken(string, string, string, *sql.Tx) (string, error)
+	IsValidTokenLogin(string, string, string, string, database.AuthenticationDAO) error
+	GetSessionData(string, string, *sql.Tx) (database.AuthenticationDAO, error)
 	encryptPassword(string) ([]byte, error)
 }
 
@@ -34,8 +35,12 @@ type AuthenticationService struct {
 	AccountDBService database.IAccountDBService
 }
 
+func (a *AuthenticationService) GetSessionData(accountID string, sessionID string, tx *sql.Tx) (database.AuthenticationDAO, error) {
+	return a.AuthDBService.GetSessionData(accountID, sessionID)
+}
+
 // CreateAccountAuthentication create authentication of the account
-func (a *AuthenticationService) CreateAccountAuthentication(account *models.Account) error {
+func (a *AuthenticationService) CreateAccountAuthentication(account *models.Account, tx *sql.Tx) error {
 	sessionID := uuid.New().String()
 
 	authToken, authTokenKey, authErr := a.createAuthToken(account.AccountID, sessionID)
@@ -62,7 +67,7 @@ func (a *AuthenticationService) CreateAccountAuthentication(account *models.Acco
 }
 
 // UpdateAccountAuthentication create authentication of the account when logging in with refreshtoken
-func (a *AuthenticationService) UpdateAccountAuthentication(accountID string, sessionID string) (string, error) {
+func (a *AuthenticationService) UpdateAccountAuthentication(accountID string, sessionID string, tx *sql.Tx) (string, error) {
 
 	authToken, authTokenKey, authErr := a.createAuthToken(accountID, sessionID)
 	if authErr != nil {
@@ -83,7 +88,7 @@ func (a *AuthenticationService) LogOutWithAccount(sessionID string, accountID st
 }
 
 // IsValidPasswordLogin validates password
-func (a *AuthenticationService) IsValidPasswordLogin(acc models.Account) (database.AccountDAO, error) {
+func (a *AuthenticationService) IsValidPasswordLogin(acc models.Account, tx *sql.Tx) (database.AccountDAO, error) {
 
 	emailValidation := acc.Username.IsValidEmailAddress()
 
@@ -107,8 +112,8 @@ func (a *AuthenticationService) IsValidPasswordLogin(acc models.Account) (databa
 	return database.AccountDAO{}, errors.New("invalid email password combination")
 }
 
-func (a *AuthenticationService) RefreshAccessToken(accountID string, sessionID string, refreshToken string) (string, error) {
-	newAuthToken, err2 := a.UpdateAccountAuthentication(accountID, sessionID)
+func (a *AuthenticationService) RefreshAccessToken(accountID string, sessionID string, refreshToken string, tx *sql.Tx) (string, error) {
+	newAuthToken, err2 := a.UpdateAccountAuthentication(accountID, sessionID, tx)
 
 	if err2 != nil {
 		return "", nil
@@ -118,13 +123,7 @@ func (a *AuthenticationService) RefreshAccessToken(accountID string, sessionID s
 }
 
 // IsValidTokenLogin validates the token
-func (a *AuthenticationService) IsValidTokenLogin(token string, accountID string, sessionID string, tokenType string) error {
-
-	sessionData, errDB := a.AuthDBService.GetSessionData(accountID, sessionID)
-
-	if errDB != nil {
-		return errDB
-	}
+func (a *AuthenticationService) IsValidTokenLogin(token string, accountID string, sessionID string, tokenType string, sessionData database.AuthenticationDAO) error {
 
 	var tokenKey rsa.PublicKey
 

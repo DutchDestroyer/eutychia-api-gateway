@@ -14,7 +14,6 @@ import (
 	"errors"
 	"net/http"
 
-	"github.com/DutchDestroyer/eutychia-api-gateway/database"
 	"github.com/DutchDestroyer/eutychia-api-gateway/models"
 	"github.com/DutchDestroyer/eutychia-api-gateway/services"
 )
@@ -30,64 +29,17 @@ func NewDefaultApiService() DefaultApiServicer {
 	return &DefaultApiService{}
 }
 
-func (s *DefaultApiService) getAccountService() services.IAccountService {
-	return &services.AccountService{
-		AccDBService: &database.AccountDBService{},
-		AuthService:  s.getAuthService(),
-	}
-}
-
-func (s *DefaultApiService) getAuthService() services.IAuthenticationService {
-	return &services.AuthenticationService{
-		AuthDBService:    &database.AuthenticationDBService{},
-		AccountDBService: &database.AccountDBService{},
-	}
-}
-
-func (s *DefaultApiService) getGenTestService() services.IGenTestService {
-	return &services.GenTestService{
-		GenTestDBService:     &database.GenericTestDBService{},
-		ProjectDBService:     &database.ProjectDBService{},
-		GenQuestionDBService: &database.GenQuestionDBService{},
-	}
-}
-
-func (s *DefaultApiService) getParticipantService() services.IParticipantService {
-	return &services.ParticipantService{
-		AccountDBService: &database.AccountDBService{},
-	}
-}
-
-func (s *DefaultApiService) getProjectService() services.IProjectService {
-	return &services.ProjectService{
-		ParticipantService:    s.getParticipantService(),
-		AccountDBService:      &database.AccountDBService{},
-		ProjectDBService:      &database.ProjectDBService{},
-		StoredAnswerDBService: &database.SubmittedAnswerDBService{},
-	}
+func (s *DefaultApiService) getResponseCreator() services.IResponseCreator {
+	return &services.ResponseCreator{}
 }
 
 //GetAllTests
 func (s *DefaultApiService) GetAllTests(ctx context.Context, accountID string) (ImplResponse, error) {
-	if !services.IsCorrectUUID(accountID) {
-		return Response(http.StatusBadRequest, nil), errors.New("incorrect data provided by client")
-	}
 
-	isResearcher, err1 := s.getAccountService().IsResearcherAccount(accountID)
+	httpStatusCode, body, err := s.getResponseCreator().ApiCallFactory(services.GetAllTests, nil,
+		services.Identifiers{AccountID: accountID, ProjectID: "", TestID: ""})
 
-	if err1 != nil {
-		return Response(http.StatusInternalServerError, nil), err1
-	}
-
-	if !isResearcher {
-		return Response(http.StatusForbidden, nil), errors.New("account doesn't have right permissions")
-	}
-
-	genericTests, err2 := s.getGenTestService().GetAllGenericTests()
-
-	if err2 != nil {
-		return Response(http.StatusInternalServerError, nil), err2
-	}
+	var genericTests = body.([]models.GenericTestOverview)
 
 	var allTests []TestsForAccount
 
@@ -95,46 +47,36 @@ func (s *DefaultApiService) GetAllTests(ctx context.Context, accountID string) (
 		allTests = append(allTests, TestsForAccount{TestID: genericTests[i].ID, TestName: genericTests[i].Name})
 	}
 
-	return Response(http.StatusOK, allTests), nil
+	return Response(httpStatusCode, allTests), err
 }
 
 //CreatesNewProject
 func (s *DefaultApiService) CreatesNewProject(ctx context.Context, accountID string, createProject CreateProject) (ImplResponse, error) {
-	// TODO - update CreateNewAccount with the required logic for this service method.
-	if !services.IsCorrectUUID(accountID) {
-		return Response(http.StatusBadRequest, nil), errors.New("incorrect data provided by client")
-	}
-
-	isResearcher, err1 := s.getAccountService().IsResearcherAccount(accountID)
-
-	if err1 != nil {
-		return Response(http.StatusInternalServerError, nil), err1
-	}
-
-	if !isResearcher {
-		return Response(http.StatusForbidden, nil), errors.New("account doesn't have right permissions")
-	}
 
 	var participants []models.Participant
 
 	for i := range createProject.Participants {
-		p := createProject.Participants[i]
-		participant, partError := s.getParticipantService().CreateParticipant(p.Firstame, p.Lastname, p.EmailAddress)
-
-		if partError != nil {
-			return Response(http.StatusBadRequest, nil), partError
-		}
-
-		participants = append(participants, *participant)
+		participants = append(participants, models.Participant{
+			FirstName:    createProject.Participants[i].Firstame,
+			LastName:     createProject.Participants[i].Lastname,
+			EmailAddress: models.EmailAddress{createProject.Participants[i].EmailAddress},
+			AccountID:    "",
+		})
 	}
 
-	err2 := s.getProjectService().AddNewProject(createProject.ProjectTitle, createProject.Tests, accountID, participants)
-
-	if err2 != nil {
-		return Response(http.StatusInternalServerError, nil), err2
+	projectCreation := models.ProjectCreation{
+		Project: models.Project{
+			ID:    "",
+			Title: createProject.ProjectTitle,
+		},
+		Participants: participants,
+		Tests:        createProject.Tests,
 	}
 
-	return Response(http.StatusOK, nil), nil
+	httpStatusCode, body, err := s.getResponseCreator().ApiCallFactory(services.CreatesNewProject, projectCreation,
+		services.Identifiers{AccountID: accountID, ProjectID: "", TestID: ""})
+
+	return Response(httpStatusCode, body), err
 }
 
 // DeleteAccountByID -
@@ -156,57 +98,24 @@ func (s *DefaultApiService) DeleteAccountByID(ctx context.Context, accountID str
 // SendEmailForSignUp -
 func (s *DefaultApiService) FinalizeAccountCreation(ctx context.Context, accountID string, aCF AccountCreationFinalize) (ImplResponse, error) {
 
-	isNewAccount, err1 := s.getAccountService().FinaleAccountCreation(accountID, aCF.EmailAddress, aCF.Password, aCF.FirstName, aCF.LastName)
+	httpStatusCode, body, err := s.getResponseCreator().ApiCallFactory(services.FinalizeAccountCreation, aCF.Password,
+		services.Identifiers{AccountID: accountID, ProjectID: "", TestID: ""})
 
-	if err1 != nil {
-		if isNewAccount {
-			return Response(http.StatusInternalServerError, nil), err1
-		} else {
-			return Response(http.StatusUnauthorized, nil), err1
-		}
-	}
-
-	if !isNewAccount {
-		// This should never happen!!!
-		return Response(http.StatusUnauthorized, nil), errors.New("invalid")
-	}
-
-	return Response(http.StatusOK, nil), nil
+	return Response(httpStatusCode, body), err
 }
 
 // GetAccountByID -
 func (s *DefaultApiService) GetAccountByID(ctx context.Context, accountID string) (ImplResponse, error) {
-	// TODO - update GetAccountByID with the required logic for this service method.
-
-	if !services.IsCorrectUUID(accountID) {
-		return Response(http.StatusBadRequest, nil), errors.New("incorrect data provided by client")
-	}
-
-	//TODO: Uncomment the next line to return response Response(400, {}) or use other options such as http.Ok ...
-	//return Response(400, nil),nil
-
-	//TODO: Uncomment the next line to return response Response(401, {}) or use other options such as http.Ok ...
-	//return Response(401, nil),nil
-
-	//TODO: Uncomment the next line to return response Response(404, {}) or use other options such as http.Ok ...
-	//return Response(404, nil),nil
-
-	return Response(http.StatusOK, GetAccountIdResponse{ID: "7b43fcf0-be12-4f91-8baa-fcdcac8118d5", Name: "Mark Wijnbergen", Email: "markwijnbergen@hey.com"}), nil
+	return Response(http.StatusNotImplemented, nil), errors.New("GetAccountByID method not implemented")
 }
 
 // GetGenericTestOfProject -
 func (s *DefaultApiService) GetGenericTestOfProject(ctx context.Context, projectID string, testID string) (ImplResponse, error) {
-	// TODO - update GetGenericTestOfProject with the required logic for this service method.
 
-	if !services.IsCorrectUUID(projectID) || !services.IsCorrectUUID(testID) {
-		return Response(http.StatusBadRequest, nil), errors.New("incorrect data provided by client")
-	}
+	httpStatusCode, body, err := s.getResponseCreator().ApiCallFactory(services.GetGenericTestOfProject, nil,
+		services.Identifiers{AccountID: "", ProjectID: projectID, TestID: testID})
 
-	test, err := s.getGenTestService().GetTestData(projectID, testID)
-
-	if err != nil {
-		return Response(http.StatusInternalServerError, nil), err
-	}
+	test := body.(models.GenericTestData)
 
 	var questions []GenericTestQuestions
 
@@ -222,163 +131,102 @@ func (s *DefaultApiService) GetGenericTestOfProject(ctx context.Context, project
 		Questions:      questions,
 	}
 
-	return Response(http.StatusOK, genericTest), nil
+	return Response(httpStatusCode, genericTest), err
 }
 
 // GetProjectsOfAccount -
 func (s *DefaultApiService) GetProjectsOfAccount(ctx context.Context, accountID string) (ImplResponse, error) {
-	// TODO - update GetProjectsOfAccount with the required logic for this service method.
 
-	if !services.IsCorrectUUID(accountID) {
-		return Response(http.StatusBadRequest, nil), errors.New("incorrect data provided by client")
-	}
+	httpStatusCode, body, err := s.getResponseCreator().ApiCallFactory(services.GetProjectsOfAccount, nil,
+		services.Identifiers{AccountID: accountID, ProjectID: "", TestID: ""})
 
-	projects, err := s.getProjectService().GetProjectsAsParticipantForAccount(accountID)
-
-	if err != nil {
-		return Response(http.StatusInternalServerError, nil), err
-	}
-
+	projects := body.([]models.Project)
 	var projectsToReturn []Project
 
 	for i := range projects {
-		projectsToReturn = append(projectsToReturn, Project{projects[i].ID, projects[i].Name})
+		projectsToReturn = append(projectsToReturn, Project{projects[i].ID, projects[i].Title})
 	}
 
-	return Response(http.StatusOK, ProjectsAccountId{Projects: projectsToReturn}), nil
+	return Response(httpStatusCode, ProjectsAccountId{Projects: projectsToReturn}), err
 }
 
 // GetTestsToPerformByAccount -
 func (s *DefaultApiService) GetTestsToPerformByAccount(ctx context.Context, projectID string, accountID string) (ImplResponse, error) {
+	httpStatusCode, body, err := s.getResponseCreator().ApiCallFactory(services.GetTestsToPerformByAccount, nil,
+		services.Identifiers{AccountID: accountID, ProjectID: projectID, TestID: ""})
 
-	if !services.IsCorrectUUID(projectID) || !services.IsCorrectUUID(accountID) {
-		return Response(http.StatusBadRequest, nil), errors.New("incorrect data provided by client")
-	}
-
-	tests, errTests := s.getGenTestService().GetTestsOfProject(projectID)
-
-	if errTests != nil {
-		return Response(http.StatusInternalServerError, nil), errTests
-	}
-
+	tests := body.([]models.GenericTestOverview)
 	var testProjects []Test
 
 	for i := range tests {
 		testProjects = append(testProjects, Test{tests[i].ID, tests[i].Name, tests[i].Type})
 	}
 
-	return Response(http.StatusOK, TestsProject{TestsToPerform: testProjects}), nil
+	return Response(httpStatusCode, TestsProject{TestsToPerform: testProjects}), err
 }
 
 // LogInWithAccount -
 func (s *DefaultApiService) LogInWithAccount(ctx context.Context, loginAccount LoginAccount) (ImplResponse, error) {
 
-	// create the account
-	account, err := s.getAccountService().GetAccount(&models.EmailAddress{EmailAddress: loginAccount.EmailAddress}, loginAccount.Password, loginAccount.RefreshToken, loginAccount.AccountID, loginAccount.SessionID)
-
-	if err != nil {
-		return Response(http.StatusBadRequest, nil), err
+	account := models.Account{
+		Username:     &models.EmailAddress{EmailAddress: loginAccount.EmailAddress},
+		Password:     loginAccount.Password,
+		AuthToken:    "",
+		RefreshToken: loginAccount.RefreshToken,
+		AccountID:    loginAccount.AccountID,
+		AccountType:  "",
+		SessionID:    loginAccount.SessionID,
+		GrantType:    loginAccount.GrantType,
 	}
 
-	// validate the account is correct
-	if loginAccount.GrantType == "password" {
-		// Validate password and obtain accountID of account
-		accountDAO, validationError := s.getAuthService().IsValidPasswordLogin(*account)
-		if validationError != nil {
-			return Response(http.StatusUnauthorized, nil), validationError
-		}
+	httpStatusCode, body, err := s.getResponseCreator().ApiCallFactory(services.LogInWithAccount, account,
+		services.Identifiers{AccountID: "", ProjectID: "", TestID: ""})
 
-		// assign account ID
-		account.AccountID = accountDAO.AccountID
-		account.AccountType = accountDAO.AccountType
+	finalAccount := body.(models.Account)
 
-		// Create authentication for account
-		authError := s.getAuthService().CreateAccountAuthentication(account)
-
-		if authError != nil {
-			return Response(http.StatusInternalServerError, nil), authError
-		}
-
-		return Response(http.StatusOK,
-			AccountDetails{account.AccountID, account.SessionID, account.AuthToken, account.RefreshToken, account.AccountType}), nil
-	} else if loginAccount.GrantType == "refreshToken" {
-		if !services.IsCorrectUUID(loginAccount.AccountID) {
-			return Response(http.StatusBadRequest, nil), errors.New("invalid account ID")
-		}
-
-		validationError := s.getAuthService().IsValidTokenLogin(account.RefreshToken, account.AccountID, account.SessionID, loginAccount.GrantType)
-		if validationError != nil {
-			return Response(http.StatusUnauthorized, nil), validationError
-		}
-
-		// Create new authtoken for account
-		newAuthToken, authError := s.getAuthService().UpdateAccountAuthentication(account.AccountID, account.SessionID)
-		if authError != nil {
-			return Response(http.StatusInternalServerError, nil), authError
-		}
-
-		return Response(http.StatusOK,
-			AccountDetails{account.AccountID, account.SessionID, newAuthToken, account.RefreshToken, account.AccountType}), nil
-	} else {
-		return Response(http.StatusBadRequest, nil), errors.New("grant type not recognized")
-	}
+	return Response(httpStatusCode, AccountDetails{finalAccount.AccountID, finalAccount.SessionID, finalAccount.AuthToken, finalAccount.RefreshToken, finalAccount.AccountType}), err
 }
 
 // LogOutWithAccount -
 func (s *DefaultApiService) LogOutWithAccount(ctx context.Context, logoutAccount LogoutAccount) (ImplResponse, error) {
-
-	if services.IsCorrectUUID(logoutAccount.AccountID) || services.IsCorrectUUID(logoutAccount.SessionID) {
-		return Response(http.StatusBadRequest, nil), errors.New("invalid uuid")
+	account := models.Account{
+		Username:     &models.EmailAddress{EmailAddress: ""},
+		Password:     "",
+		AuthToken:    logoutAccount.AccessToken,
+		RefreshToken: "",
+		AccountID:    logoutAccount.AccountID,
+		AccountType:  "",
+		SessionID:    logoutAccount.SessionID,
+		GrantType:    "",
 	}
 
-	err1 := s.getAuthService().IsValidTokenLogin(logoutAccount.AccessToken, logoutAccount.AccountID, logoutAccount.SessionID, "authToken")
+	httpStatusCode, body, err := s.getResponseCreator().ApiCallFactory(services.LogOutWithAccount, account,
+		services.Identifiers{AccountID: "", ProjectID: "", TestID: ""})
 
-	if err1 != nil {
-		return Response(http.StatusUnauthorized, nil), err1
-	}
-
-	err := s.getAuthService().LogOutWithAccount(logoutAccount.SessionID, logoutAccount.AccountID, logoutAccount.AccessToken)
-
-	if err != nil {
-		return Response(http.StatusInternalServerError, nil), err
-	}
-
-	return Response(http.StatusOK, nil), nil
+	return Response(httpStatusCode, body), err
 }
 
 // RefreshAccessToken -
 func (s *DefaultApiService) RefreshAccessToken(ctx context.Context, refreshDetails RefreshDetails) (ImplResponse, error) {
-
-	if !services.IsCorrectUUID(refreshDetails.AccountID) || !services.IsCorrectUUID(refreshDetails.SessionID) {
-		return Response(http.StatusBadRequest, nil), errors.New("invalid uuid")
+	account := models.Account{
+		Username:     &models.EmailAddress{EmailAddress: ""},
+		Password:     "",
+		AuthToken:    "",
+		RefreshToken: refreshDetails.RefreshToken,
+		AccountID:    refreshDetails.AccountID,
+		AccountType:  "",
+		SessionID:    refreshDetails.SessionID,
+		GrantType:    "",
 	}
 
-	err1 := s.getAuthService().IsValidTokenLogin(refreshDetails.RefreshToken, refreshDetails.AccountID, refreshDetails.SessionID, "refreshToken")
+	httpStatusCode, body, err := s.getResponseCreator().ApiCallFactory(services.RefreshAccessToken, account,
+		services.Identifiers{AccountID: "", ProjectID: "", TestID: ""})
 
-	if err1 != nil {
-		return Response(http.StatusUnauthorized, nil), err1
-	}
-
-	newAuthToken, err := s.getAuthService().RefreshAccessToken(refreshDetails.AccountID, refreshDetails.SessionID, refreshDetails.RefreshToken)
-
-	if err != nil {
-		return Response(http.StatusInternalServerError, nil), err
-	}
-
-	return Response(http.StatusOK, newAuthToken), nil
+	return Response(httpStatusCode, body.(string)), err
 }
 
 // SubmitAnswerToTest -
 func (s *DefaultApiService) SubmitAnswerToTest(ctx context.Context, projectID string, testID string, genericTestAnswers GenericTestAnswers) (ImplResponse, error) {
-	// TODO - update SubmitAnswerToTest with the required logic for this service method.
-
-	if !services.IsCorrectUUID(projectID) || !services.IsCorrectUUID(testID) || !services.IsCorrectUUID(genericTestAnswers.AccountID) {
-		return Response(http.StatusBadRequest, nil), errors.New("incorrect data provided by client")
-	}
-
-	if len(genericTestAnswers.Answers) < 1 {
-		return Response(http.StatusBadRequest, nil), errors.New("no answers provided")
-	}
 
 	var submittedAnswers []models.SubmittedAnswers
 
@@ -391,11 +239,9 @@ func (s *DefaultApiService) SubmitAnswerToTest(ctx context.Context, projectID st
 			})
 	}
 
-	err := s.getProjectService().StoreTestAnswers(projectID, testID, genericTestAnswers.AccountID, submittedAnswers)
+	httpStatusCode, body, err := s.getResponseCreator().ApiCallFactory(services.SubmitAnswerToTest, submittedAnswers,
+		services.Identifiers{AccountID: genericTestAnswers.AccountID, ProjectID: projectID, TestID: testID})
 
-	if err != nil {
-		return Response(http.StatusInternalServerError, nil), nil
-	}
+	return Response(httpStatusCode, body), err
 
-	return Response(http.StatusOK, nil), nil
 }

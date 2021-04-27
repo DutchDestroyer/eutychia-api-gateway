@@ -51,6 +51,7 @@ func (a *AccountDBService) CreateInitialParticipantAccount(
 	nonceLastName string,
 	emailAddress string,
 	nonceEmailAddress string) (string, error) {
+
 	accountID := uuid.New().String()
 
 	accountDatabase = append(accountDatabase, AccountDAO{

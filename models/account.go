@@ -15,4 +15,6 @@ type Account struct {
 	AccountType string
 
 	SessionID string
+
+	GrantType string
 }

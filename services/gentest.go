@@ -1,6 +1,7 @@
 package services
 
 import (
+	"database/sql"
 	"errors"
 	"strconv"
 
@@ -9,9 +10,9 @@ import (
 )
 
 type IGenTestService interface {
-	GetAllGenericTests() ([]models.GenericTestOverview, error)
-	GetTestsOfProject(string) ([]models.GenericTestOverview, error)
-	GetTestData(string, string) (models.GenericTestData, error)
+	GetAllGenericTests(*sql.Tx) ([]models.GenericTestOverview, error)
+	GetTestsOfProject(string, *sql.Tx) ([]models.GenericTestOverview, error)
+	GetTestData(string, string, *sql.Tx) (models.GenericTestData, error)
 }
 
 type GenTestService struct {
@@ -21,12 +22,12 @@ type GenTestService struct {
 }
 
 // GetAllGenericTests gets all generic tests that are in the database
-func (g *GenTestService) GetAllGenericTests() ([]models.GenericTestOverview, error) {
+func (g *GenTestService) GetAllGenericTests(tx *sql.Tx) ([]models.GenericTestOverview, error) {
 	return g.GenTestDBService.GetAllGenericTests()
 }
 
 // GetTestsOfProject gets all the tests of a project
-func (g *GenTestService) GetTestsOfProject(projectID string) ([]models.GenericTestOverview, error) {
+func (g *GenTestService) GetTestsOfProject(projectID string, tx *sql.Tx) ([]models.GenericTestOverview, error) {
 	projects, errGetProjects := g.ProjectDBService.GetProjects([]string{projectID})
 
 	if errGetProjects != nil {
@@ -54,7 +55,7 @@ func (g *GenTestService) GetTestsOfProject(projectID string) ([]models.GenericTe
 	return modTest, nil
 }
 
-func (g *GenTestService) GetTestData(projectID string, testID string) (models.GenericTestData, error) {
+func (g *GenTestService) GetTestData(projectID string, testID string, tx *sql.Tx) (models.GenericTestData, error) {
 	testData, err1 := g.GenTestDBService.GetTestsOfIDs([]string{testID})
 
 	if err1 != nil {

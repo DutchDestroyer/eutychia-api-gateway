@@ -1,15 +1,17 @@
 package services
 
 import (
+	"database/sql"
+
 	"github.com/DutchDestroyer/eutychia-api-gateway/database"
 	"github.com/DutchDestroyer/eutychia-api-gateway/models"
 )
 
 type IProjectService interface {
-	AddNewProject(string, []string, string, []models.Participant) error
-	GetProjectsAsParticipantForAccount(string) ([]models.Project, error)
-	GetProjectsAsResearcherForAccount(accountID string)
-	StoreTestAnswers(string, string, string, []models.SubmittedAnswers) error
+	AddNewProject(string, []string, string, []models.Participant, *sql.Tx) error
+	GetProjectsAsParticipantForAccount(string, *sql.Tx) ([]models.Project, error)
+	GetProjectsAsResearcherForAccount(string, *sql.Tx)
+	StoreTestAnswers(string, string, string, []models.SubmittedAnswers, *sql.Tx) error
 }
 
 type ProjectService struct {
@@ -20,7 +22,7 @@ type ProjectService struct {
 }
 
 // AddNewProject does all logic to add a new project to be added to the db
-func (p *ProjectService) AddNewProject(projectName string, tests []string, researcher string, participants []models.Participant) error {
+func (p *ProjectService) AddNewProject(projectName string, tests []string, researcher string, participants []models.Participant, tx *sql.Tx) error {
 
 	var participantIDs []string
 
@@ -39,7 +41,7 @@ func (p *ProjectService) AddNewProject(projectName string, tests []string, resea
 }
 
 //GetProjectsAsParticipantForAccount gets all the projects of the specific accountID where this account is a participant
-func (p *ProjectService) GetProjectsAsParticipantForAccount(accountID string) ([]models.Project, error) {
+func (p *ProjectService) GetProjectsAsParticipantForAccount(accountID string, tx *sql.Tx) ([]models.Project, error) {
 	projectIDs, errDbAccount := p.AccountDBService.GetProjectIDsAsParticipantForAccount(accountID)
 
 	if errDbAccount != nil {
@@ -55,18 +57,18 @@ func (p *ProjectService) GetProjectsAsParticipantForAccount(accountID string) ([
 	var projectsToReturn []models.Project
 
 	for i := range projects {
-		projectsToReturn = append(projectsToReturn, models.Project{ID: projects[i].ID, Name: projects[i].Name})
+		projectsToReturn = append(projectsToReturn, models.Project{ID: projects[i].ID, Title: projects[i].Name})
 	}
 
 	return projectsToReturn, nil
 }
 
 //GetProjectsAsResearcherForAccount gets all the projects of the specific accountID where this account is a researcher
-func (p *ProjectService) GetProjectsAsResearcherForAccount(accountID string) {
+func (p *ProjectService) GetProjectsAsResearcherForAccount(accountID string, tx *sql.Tx) {
 
 }
 
-func (p *ProjectService) StoreTestAnswers(projectID string, testID string, accountID string, answers []models.SubmittedAnswers) error {
+func (p *ProjectService) StoreTestAnswers(projectID string, testID string, accountID string, answers []models.SubmittedAnswers, tx *sql.Tx) error {
 
 	return p.StoredAnswerDBService.StoreAnswers(projectID, testID, accountID, answers)
 }
