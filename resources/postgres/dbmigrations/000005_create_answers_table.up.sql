@@ -1,7 +1,8 @@
 BEGIN;
 
 CREATE TABLE IF NOT EXISTS answers (
-    answer_id uuid Primary Key UNIQUE NOT NULL,
+    id SERIAL Primary Key,
+    answer_id uuid UNIQUE NOT NULL,
     answer text NOT NULL,
     generic_question_id uuid REFERENCES generic_question NOT NULL
 );

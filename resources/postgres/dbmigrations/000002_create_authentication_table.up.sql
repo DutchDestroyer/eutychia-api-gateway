@@ -1,7 +1,8 @@
 BEGIN;
 
 CREATE TABLE IF NOT EXISTS ix_authentication (
-    ix_session_id uuid  Primary Key NOT NULL,
+    id SERIAL Primary Key,
+    ix_session_id uuid UNIQUE NOT NULL,
     auth_token VARCHAR(255) NOT NULL,
     auth_token_key bytea NOT NULL,
     refresh_token VARCHAR(255) NOT NULL,

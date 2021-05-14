@@ -1,7 +1,8 @@
 BEGIN;
 
 CREATE TABLE IF NOT EXISTS submitted_answer (
-    submitted_answer_id uuid Primary Key UNIQUE NOT NULL,
+    id SERIAL Primary Key,
+    submitted_answer_id uuid UNIQUE NOT NULL,
     question_number SMALLINT NOT NULL,
     answer text NOT NULL,
     time_to_answer DOUBLE PRECISION NOT NULL,
