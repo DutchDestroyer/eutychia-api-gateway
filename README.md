@@ -33,4 +33,21 @@ Once image is built use
 docker run --rm -it openapi 
 ```
 
+### Docker
+- In the terminal, navigate to the docker folder, run docker-compose up -d --remove-orphans
 
+### DB migrations
+
+#### Creating a new db migration
+- From the root of the project, run migrate create -ext sql -dir resources/postgres/dbmigrations -seq <NameOfMigrationFile>
+- This should create 2 db migration files, one up and one down.
+- In the up file, write the db migration
+- In the down file, write the rollback plan
+
+#### Executing the db migration
+- Start Docker 
+- In the terminal, navigate to the root folder of the project
+- Run `migrate -path resources/postgres/dbmigrations -database "postgresql://postgres:postgres@localhost5432/eutychia?sslmode=disable" -verbose up`
+- If something went wrong, you need to force the last working version of the db:
+`migrate -path resources/postgres/dbmigrations -database "postgresql://postgres:postgres@localhost5432/eutychia?sslmode=disable" force VERSION` 
+- If you want to migrate down, run `migrate -path resources/postgres/dbmigrations -database "postgresql://postgres:postgres@localhost5432/eutychia?sslmode=disable" down <NumberOfDownMigrations>` 

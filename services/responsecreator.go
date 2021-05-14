@@ -47,30 +47,41 @@ func (r *ResponseCreator) ApiCallFactory(api apicall, httpBody interface{}, iden
 		return getDatabaseErrorResponse(err)
 	}
 
+	var response int
+	var result interface{}
+
 	switch api {
 	case GetAllTests:
-		return r.getAllTests(identifiers.AccountID, tx)
+		response, result, err = r.getAllTests(identifiers.AccountID, tx)
 	case CreatesNewProject:
-		return r.createsNewProject(identifiers.AccountID, httpBody, tx)
+		response, result, err = r.createsNewProject(identifiers.AccountID, httpBody, tx)
 	case FinalizeAccountCreation:
-		return r.finalizeAccountCreation(identifiers.AccountID, httpBody, tx)
+		response, result, err = r.finalizeAccountCreation(identifiers.AccountID, httpBody, tx)
 	case GetGenericTestOfProject:
-		return r.getGenericTestOfProject(identifiers.ProjectID, identifiers.TestID, tx)
+		response, result, err = r.getGenericTestOfProject(identifiers.ProjectID, identifiers.TestID, tx)
 	case GetProjectsOfAccount:
-		return r.getProjectsOfAccount(identifiers.AccountID, tx)
+		response, result, err = r.getProjectsOfAccount(identifiers.AccountID, tx)
 	case GetTestsToPerformByAccount:
-		return r.getTestsToPerformByAccount(identifiers.ProjectID, identifiers.AccountID, tx)
+		response, result, err = r.getTestsToPerformByAccount(identifiers.ProjectID, identifiers.AccountID, tx)
 	case LogInWithAccount:
-		return r.logInWithAccount(httpBody, tx)
+		response, result, err = r.logInWithAccount(httpBody, tx)
 	case LogOutWithAccount:
-		return r.logOutWithAccount(httpBody, tx)
+		response, result, err = r.logOutWithAccount(httpBody, tx)
 	case RefreshAccessToken:
-		return r.refreshAccessToken(httpBody, tx)
+		response, result, err = r.refreshAccessToken(httpBody, tx)
 	case SubmitAnswerToTest:
-		return r.submitAnswersToTest(identifiers.ProjectID, identifiers.TestID, identifiers.AccountID, httpBody, tx)
+		response, result, err = r.submitAnswersToTest(identifiers.ProjectID, identifiers.TestID, identifiers.AccountID, httpBody, tx)
 	default:
 		return 404, nil, errors.New("unknown api call")
 	}
+
+	if err != nil {
+		tx.Rollback()
+	} else {
+		err = tx.Commit()
+	}
+
+	return response, result, err
 }
 
 func (r *ResponseCreator) getAllTests(accountID string, tx *sql.Tx) (int, interface{}, error) {
@@ -82,23 +93,15 @@ func (r *ResponseCreator) getAllTests(accountID string, tx *sql.Tx) (int, interf
 	isResearcher, err := r.getAccountService().IsResearcherAccount(accountID, tx)
 
 	if err != nil {
-		tx.Rollback()
 		return getDatabaseErrorResponse(err)
 	}
 
 	if !isResearcher {
-		tx.Rollback()
 		return getPermissionErrorResponse("account doesn't have right permissions")
 	}
 
 	genericTests, err := r.getGenTestService().GetAllGenericTests(tx)
 
-	if err != nil {
-		tx.Rollback()
-		return getDatabaseErrorResponse(err)
-	}
-
-	err = tx.Commit()
 	if err != nil {
 		return getDatabaseErrorResponse(err)
 	}
@@ -107,6 +110,7 @@ func (r *ResponseCreator) getAllTests(accountID string, tx *sql.Tx) (int, interf
 }
 
 func (r *ResponseCreator) createsNewProject(accountID string, httpBody interface{}, tx *sql.Tx) (int, interface{}, error) {
+
 	if !IsCorrectUUID(accountID) {
 		return getIncorrectDataResponse("invalid uuid")
 	}
@@ -114,7 +118,6 @@ func (r *ResponseCreator) createsNewProject(accountID string, httpBody interface
 	isResearcher, err := r.getAccountService().IsResearcherAccount(accountID, tx)
 
 	if err != nil {
-		tx.Rollback()
 		return getDatabaseErrorResponse(err)
 	}
 
@@ -133,12 +136,6 @@ func (r *ResponseCreator) createsNewProject(accountID string, httpBody interface
 	err = r.getProjectService().AddNewProject(createProject.Project.Title, createProject.Tests, accountID, createProject.Participants, tx)
 
 	if err != nil {
-		tx.Rollback()
-		return getDatabaseErrorResponse(err)
-	}
-
-	err = tx.Commit()
-	if err != nil {
 		return getDatabaseErrorResponse(err)
 	}
 
@@ -156,20 +153,13 @@ func (r *ResponseCreator) finalizeAccountCreation(accountID string, password int
 		if !hasNoPassword {
 			return getPermissionErrorResponse("account already has a password")
 		} else {
-			tx.Rollback()
 			return getDatabaseErrorResponse(err)
 		}
 	}
 
 	if !hasNoPassword {
 		// This should never happen!!!
-		tx.Rollback()
 		return getPermissionErrorResponse("account already has a password")
-	}
-
-	err = tx.Commit()
-	if err != nil {
-		return getDatabaseErrorResponse(err)
 	}
 
 	return 200, nil, nil
@@ -182,12 +172,6 @@ func (r *ResponseCreator) getGenericTestOfProject(projectID string, testID strin
 
 	test, err := r.getGenTestService().GetTestData(projectID, testID, tx)
 
-	if err != nil {
-		tx.Rollback()
-		return getDatabaseErrorResponse(err)
-	}
-
-	err = tx.Commit()
 	if err != nil {
 		return getDatabaseErrorResponse(err)
 	}
@@ -203,12 +187,6 @@ func (r *ResponseCreator) getProjectsOfAccount(accountID string, tx *sql.Tx) (in
 	projects, err := r.getProjectService().GetProjectsAsParticipantForAccount(accountID, tx)
 
 	if err != nil {
-		tx.Rollback()
-		return getDatabaseErrorResponse(err)
-	}
-
-	err = tx.Commit()
-	if err != nil {
 		return getDatabaseErrorResponse(err)
 	}
 
@@ -222,12 +200,6 @@ func (r *ResponseCreator) getTestsToPerformByAccount(projectID string, accountID
 
 	tests, err := r.getGenTestService().GetTestsOfProject(projectID, tx)
 
-	if err != nil {
-		tx.Rollback()
-		return getDatabaseErrorResponse(err)
-	}
-
-	err = tx.Commit()
 	if err != nil {
 		return getDatabaseErrorResponse(err)
 	}
@@ -248,7 +220,6 @@ func (r *ResponseCreator) logInWithAccount(account interface{}, tx *sql.Tx) (int
 		// Validate password and obtain accountID of account
 		accountDAO, err := r.getAuthService().IsValidPasswordLogin(accountData, tx)
 		if err != nil {
-			tx.Rollback()
 			return getPermissionErrorResponse("invalid username and/or password")
 		}
 
@@ -259,12 +230,6 @@ func (r *ResponseCreator) logInWithAccount(account interface{}, tx *sql.Tx) (int
 		// Create authentication for account
 		err = r.getAuthService().CreateAccountAuthentication(&accountData, tx)
 
-		if err != nil {
-			tx.Rollback()
-			return getDatabaseErrorResponse(err)
-		}
-
-		err = tx.Commit()
 		if err != nil {
 			return getDatabaseErrorResponse(err)
 		}
@@ -278,7 +243,6 @@ func (r *ResponseCreator) logInWithAccount(account interface{}, tx *sql.Tx) (int
 		sessionData, err := r.getAuthService().GetSessionData(accountData.AccountID, accountData.SessionID, tx)
 
 		if err != nil {
-			tx.Rollback()
 			return getDatabaseErrorResponse(err)
 		}
 
@@ -290,16 +254,10 @@ func (r *ResponseCreator) logInWithAccount(account interface{}, tx *sql.Tx) (int
 		// Create new authtoken for account
 		newAuthToken, err := r.getAuthService().UpdateAccountAuthentication(accountData.AccountID, accountData.SessionID, tx)
 		if err != nil {
-			tx.Rollback()
 			return getDatabaseErrorResponse(err)
 		}
 
 		accountData.AuthToken = newAuthToken
-
-		err = tx.Commit()
-		if err != nil {
-			return getDatabaseErrorResponse(err)
-		}
 
 		return 200, accountData, nil
 	} else {
@@ -318,7 +276,6 @@ func (r *ResponseCreator) logOutWithAccount(account interface{}, tx *sql.Tx) (in
 	sessionData, err := r.getAuthService().GetSessionData(logoutAccount.AccountID, logoutAccount.SessionID, tx)
 
 	if err != nil {
-		tx.Rollback()
 		return getDatabaseErrorResponse(err)
 	}
 
@@ -330,12 +287,6 @@ func (r *ResponseCreator) logOutWithAccount(account interface{}, tx *sql.Tx) (in
 
 	err = r.getAuthService().LogOutWithAccount(logoutAccount.SessionID, logoutAccount.AccountID, logoutAccount.AuthToken)
 
-	if err != nil {
-		tx.Rollback()
-		return getDatabaseErrorResponse(err)
-	}
-
-	err = tx.Commit()
 	if err != nil {
 		return getDatabaseErrorResponse(err)
 	}
@@ -354,7 +305,6 @@ func (r *ResponseCreator) refreshAccessToken(account interface{}, tx *sql.Tx) (i
 	sessionData, err := r.getAuthService().GetSessionData(refreshDetails.AccountID, refreshDetails.SessionID, tx)
 
 	if err != nil {
-		tx.Rollback()
 		return getDatabaseErrorResponse(err)
 	}
 
@@ -366,12 +316,6 @@ func (r *ResponseCreator) refreshAccessToken(account interface{}, tx *sql.Tx) (i
 
 	newAuthToken, err := r.getAuthService().RefreshAccessToken(refreshDetails.AccountID, refreshDetails.SessionID, refreshDetails.RefreshToken, tx)
 
-	if err != nil {
-		tx.Rollback()
-		return getDatabaseErrorResponse(err)
-	}
-
-	err = tx.Commit()
 	if err != nil {
 		return getDatabaseErrorResponse(err)
 	}
@@ -392,12 +336,6 @@ func (r *ResponseCreator) submitAnswersToTest(projectID string, testID string, a
 	}
 
 	err := r.getProjectService().StoreTestAnswers(projectID, testID, accountID, genericTestAnswers, tx)
-	if err != nil {
-		tx.Rollback()
-		return getDatabaseErrorResponse(err)
-	}
-
-	err = tx.Commit()
 	if err != nil {
 		return getDatabaseErrorResponse(err)
 	}
