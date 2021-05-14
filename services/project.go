@@ -28,7 +28,7 @@ func (p *ProjectService) AddNewProject(projectName string, tests []string, resea
 
 	for i := range participants {
 		participantID, err := p.ParticipantService.LinkParticipantToAccount(
-			participants[i].EmailAddress.EmailAddress, participants[i].FirstName, participants[i].LastName)
+			participants[i].EmailAddress.EmailAddress, participants[i].FirstName, participants[i].LastName, tx)
 
 		if err != nil {
 			return err
@@ -42,7 +42,7 @@ func (p *ProjectService) AddNewProject(projectName string, tests []string, resea
 
 //GetProjectsAsParticipantForAccount gets all the projects of the specific accountID where this account is a participant
 func (p *ProjectService) GetProjectsAsParticipantForAccount(accountID string, tx *sql.Tx) ([]models.Project, error) {
-	projectIDs, errDbAccount := p.AccountDBService.GetProjectIDsAsParticipantForAccount(accountID)
+	projectIDs, errDbAccount := p.AccountDBService.GetProjectIDsAsParticipantForAccount(accountID, tx)
 
 	if errDbAccount != nil {
 		return []models.Project{}, errDbAccount

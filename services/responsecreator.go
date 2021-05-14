@@ -87,6 +87,7 @@ func (r *ResponseCreator) getAllTests(accountID string, tx *sql.Tx) (int, interf
 	}
 
 	if !isResearcher {
+		tx.Rollback()
 		return getPermissionErrorResponse("account doesn't have right permissions")
 	}
 

@@ -20,7 +20,7 @@ type AccountService struct {
 // FinaleAccountCreation finalizes the creation of the account by adding the password, but first checks though if this is legitimate
 func (a AccountService) FinaleAccountCreation(accountID string, password string, tx *sql.Tx) (bool, error) {
 
-	account, err := a.AccDBService.GetDatabaseEntry(accountID)
+	account, err := a.AccDBService.GetDatabaseEntry(accountID, tx)
 
 	if err != nil {
 		return false, err
@@ -42,7 +42,7 @@ func (a AccountService) FinaleAccountCreation(accountID string, password string,
 		return hasNoPassword, err
 	}
 
-	err = a.AccDBService.FinalizeAccountCreation(accountID, encPW)
+	err = a.AccDBService.FinalizeAccountCreation(accountID, encPW, tx)
 
 	return hasNoPassword, err
 }
@@ -50,7 +50,7 @@ func (a AccountService) FinaleAccountCreation(accountID string, password string,
 // IsResearcherAccount determines whether the account is a researcher account, which means it has certain admin rights
 func (a AccountService) IsResearcherAccount(accountID string, tx *sql.Tx) (bool, error) {
 
-	acc, err1 := a.AccDBService.GetDatabaseEntry(accountID)
+	acc, err1 := a.AccDBService.GetDatabaseEntry(accountID, tx)
 
 	if err1 != nil {
 		return false, err1

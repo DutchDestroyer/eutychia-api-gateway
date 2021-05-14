@@ -1,6 +1,7 @@
 package database
 
 import (
+	"database/sql"
 	"errors"
 
 	"github.com/google/uuid"
@@ -32,12 +33,12 @@ var accountDatabase []AccountDAO = []AccountDAO{
 }
 
 type IAccountDBService interface {
-	CreateInitialParticipantAccount(string, string, string, string, string, string) (string, error)
-	FinalizeAccountCreation(string, []byte) error
-	GetDatabaseEntry(string) (AccountDAO, error)
-	GetDatabaseEntryBasedOnMail(string) (AccountDAO, error)
-	GetProjectIDsAsParticipantForAccount(string) ([]string, error)
-	GetProjectIDsAsResearcherForAccount(string) ([]string, error)
+	CreateInitialParticipantAccount(string, string, string, string, string, string, *sql.Tx) (string, error)
+	FinalizeAccountCreation(string, []byte, *sql.Tx) error
+	GetDatabaseEntry(string, *sql.Tx) (AccountDAO, error)
+	GetDatabaseEntryBasedOnMail(string, *sql.Tx) (AccountDAO, error)
+	GetProjectIDsAsParticipantForAccount(string, *sql.Tx) ([]string, error)
+	GetProjectIDsAsResearcherForAccount(string, *sql.Tx) ([]string, error)
 }
 
 type AccountDBService struct{}
@@ -50,7 +51,8 @@ func (a *AccountDBService) CreateInitialParticipantAccount(
 	lastName string,
 	nonceLastName string,
 	emailAddress string,
-	nonceEmailAddress string) (string, error) {
+	nonceEmailAddress string,
+	tx *sql.Tx) (string, error) {
 
 	accountID := uuid.New().String()
 
@@ -63,7 +65,7 @@ func (a *AccountDBService) CreateInitialParticipantAccount(
 }
 
 // FinalizeAccountCreation
-func (a *AccountDBService) FinalizeAccountCreation(accountID string, encryptedpassword []byte) error {
+func (a *AccountDBService) FinalizeAccountCreation(accountID string, encryptedpassword []byte, tx *sql.Tx) error {
 	for i := range accountDatabase {
 		if accountDatabase[i].AccountID == accountID {
 			accountDatabase[i].Password = string(encryptedpassword)
@@ -75,7 +77,7 @@ func (a *AccountDBService) FinalizeAccountCreation(accountID string, encryptedpa
 }
 
 // GetDatabaseEntry gets an entry from the database
-func (a *AccountDBService) GetDatabaseEntry(accountID string) (AccountDAO, error) {
+func (a *AccountDBService) GetDatabaseEntry(accountID string, tx *sql.Tx) (AccountDAO, error) {
 	for i := range accountDatabase {
 		if accountDatabase[i].AccountID == accountID {
 			return accountDatabase[i], nil
@@ -85,7 +87,7 @@ func (a *AccountDBService) GetDatabaseEntry(accountID string) (AccountDAO, error
 }
 
 // GetDatabaseEntryBasedOnMail when user logs in, id is not known
-func (a *AccountDBService) GetDatabaseEntryBasedOnMail(username string) (AccountDAO, error) {
+func (a *AccountDBService) GetDatabaseEntryBasedOnMail(username string, tx *sql.Tx) (AccountDAO, error) {
 	for i := range accountDatabase {
 		if accountDatabase[i].EmailAddress == username {
 			return accountDatabase[i], nil
@@ -95,7 +97,7 @@ func (a *AccountDBService) GetDatabaseEntryBasedOnMail(username string) (Account
 }
 
 //GetProjectIDsAsParticipantForAccount gets the projects where the account is a participant
-func (a *AccountDBService) GetProjectIDsAsParticipantForAccount(accountID string) ([]string, error) {
+func (a *AccountDBService) GetProjectIDsAsParticipantForAccount(accountID string, tx *sql.Tx) ([]string, error) {
 	for i := range accountDatabase {
 		if accountDatabase[i].AccountID == accountID {
 			return accountDatabase[i].ProjectsAsParticipant, nil
@@ -105,7 +107,7 @@ func (a *AccountDBService) GetProjectIDsAsParticipantForAccount(accountID string
 }
 
 //GetProjectIDsAsResearcherForAccount gets the projects where the account is a researcher
-func (a *AccountDBService) GetProjectIDsAsResearcherForAccount(accountID string) ([]string, error) {
+func (a *AccountDBService) GetProjectIDsAsResearcherForAccount(accountID string, tx *sql.Tx) ([]string, error) {
 	for i := range accountDatabase {
 		if accountDatabase[i].AccountID == accountID {
 			return accountDatabase[i].ProjectsAsResearcher, nil

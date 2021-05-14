@@ -97,7 +97,7 @@ func (a *AuthenticationService) IsValidPasswordLogin(acc models.Account, tx *sql
 	}
 
 	// Find email address in db
-	accountDAO, errDAO := a.AccountDBService.GetDatabaseEntryBasedOnMail(acc.Username.GetEmailAddress().EmailAddress)
+	accountDAO, errDAO := a.AccountDBService.GetDatabaseEntryBasedOnMail(acc.Username.GetEmailAddress().EmailAddress, tx)
 
 	if errDAO != nil {
 		return database.AccountDAO{}, errDAO

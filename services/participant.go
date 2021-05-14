@@ -1,13 +1,16 @@
 package services
 
 import (
+	"database/sql"
+	"fmt"
+
 	"github.com/DutchDestroyer/eutychia-api-gateway/database"
 	"github.com/DutchDestroyer/eutychia-api-gateway/models"
 )
 
 type IParticipantService interface {
 	CreateParticipant(string, string, string) (*models.Participant, error)
-	LinkParticipantToAccount(string, string, string) (string, error)
+	LinkParticipantToAccount(string, string, string, *sql.Tx) (string, error)
 }
 
 type ParticipantService struct {
@@ -32,8 +35,8 @@ func (p *ParticipantService) CreateParticipant(firstName string, lastName string
 	}, nil
 }
 
-func (p *ParticipantService) LinkParticipantToAccount(emailAddress string, firstName string, lastName string) (string, error) {
-	account, err1 := p.AccountDBService.GetDatabaseEntryBasedOnMail(emailAddress)
+func (p *ParticipantService) LinkParticipantToAccount(emailAddress string, firstName string, lastName string, tx *sql.Tx) (string, error) {
+	account, err1 := p.AccountDBService.GetDatabaseEntryBasedOnMail(emailAddress, tx)
 
 	if err1 != nil {
 		if account.AccountID == "" {
@@ -63,7 +66,7 @@ func (p *ParticipantService) LinkParticipantToAccount(emailAddress string, first
 				lastNameEnc,
 				lastNameNonce,
 				emailAddressEnc,
-				emailAddressNonce)
+				emailAddressNonce, tx)
 			// Include the newly created accountID in the email, so when the participant signs up via email, it can be linked to the account
 			if err != nil {
 				return "", err
@@ -73,6 +76,7 @@ func (p *ParticipantService) LinkParticipantToAccount(emailAddress string, first
 			sendEmailErr := SendEmail(emailAddress, "test1")
 			if sendEmailErr != nil {
 				// TODO do something to notify the researcher
+				fmt.Printf("what to do here?")
 			}
 
 			return accountID, nil
@@ -88,6 +92,7 @@ func (p *ParticipantService) LinkParticipantToAccount(emailAddress string, first
 
 	if sendEmailErr != nil {
 		// TODO do something to notify the researcher
+		fmt.Printf("what to do here?")
 	}
 
 	// If account already exists, return the AccountID
