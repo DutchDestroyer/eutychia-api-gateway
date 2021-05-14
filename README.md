@@ -47,7 +47,11 @@ docker run --rm -it openapi
 #### Executing the db migration
 - Start Docker 
 - In the terminal, navigate to the root folder of the project
-- Run `migrate -path resources/postgres/dbmigrations -database "postgresql://postgres:postgres@localhost5432/eutychia?sslmode=disable" -verbose up`
+- Run `migrate -path resources/postgres/dbmigrations -database "postgresql://postgres:postgres@localhost:5432/eutychia?sslmode=disable" -verbose up`
 - If something went wrong, you need to force the last working version of the db:
-`migrate -path resources/postgres/dbmigrations -database "postgresql://postgres:postgres@localhost5432/eutychia?sslmode=disable" force VERSION` 
-- If you want to migrate down, run `migrate -path resources/postgres/dbmigrations -database "postgresql://postgres:postgres@localhost5432/eutychia?sslmode=disable" down <NumberOfDownMigrations>` 
+`migrate -path resources/postgres/dbmigrations -database "postgresql://postgres:postgres@localhost:5432/eutychia?sslmode=disable" force VERSION` 
+- If you want to migrate down, run `migrate -path resources/postgres/dbmigrations -database "postgresql://postgres:postgres@localhost:5432/eutychia?sslmode=disable" down <NumberOfDownMigrations>` 
+
+#### For local use:
+- To remove the database: `docker exec -it <container-id> psql -U <username> -d postgres -c "DROP DATABASE eutychia;"`
+- To create the db: `docker exec -it docker_postgres_1 createdb --username=postgres --owner=postgres eutychia`

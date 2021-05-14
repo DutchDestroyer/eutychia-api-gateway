@@ -1,0 +1,1 @@
+DROP TABLE IF EXISTS submitted_answers_generic_questionnaire_junction;

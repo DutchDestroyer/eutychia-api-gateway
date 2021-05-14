@@ -6,6 +6,6 @@ CREATE TABLE IF NOT EXISTS projects (
     project_name VARCHAR(255) NOT NULL
 );
 
-CREATE INDEX ON "answers" ("project_id");
+CREATE INDEX ON "projects" ("project_id");
 
 COMMIT;

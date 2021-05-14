@@ -9,9 +9,9 @@ CREATE TYPE enum_question_type AS ENUM (
 CREATE TABLE IF NOT EXISTS generic_question (
     id SERIAL Primary Key,
     generic_question_id uuid UNIQUE NOT NULL,
-    question text NOT NULL,
+    question TEXT NOT NULL,
     question_type enum_question_type NOT NULL,
-    generic_questionnaire_id uuid REFERENCES generic_questionnaire NOT NULL
+    generic_questionnaire_id uuid REFERENCES generic_questionnaire (generic_questionnaire_id) NOT NULL
 );
 
 CREATE INDEX ON "generic_question" ("generic_questionnaire_id");

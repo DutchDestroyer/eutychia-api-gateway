@@ -1,7 +1,7 @@
 BEGIN;
 
 CREATE TABLE IF NOT EXISTS projects_participants_junction (
-    project_id uuid REFERENCES projects NOT NULL,
+    project_id uuid REFERENCES projects (project_id) NOT NULL,
     participant_id uuid REfERENCES accounts (account_id) NOT NULL,
     UNIQUE(project_id, participant_id)
 );

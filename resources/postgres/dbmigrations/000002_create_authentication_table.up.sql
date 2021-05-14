@@ -7,7 +7,7 @@ CREATE TABLE IF NOT EXISTS ix_authentication (
     auth_token_key bytea NOT NULL,
     refresh_token VARCHAR(255) NOT NULL,
     refresh_token_key bytea NOT NULL,
-    account_id uuid REFERENCES accounts NOT NULL
+    account_id uuid REFERENCES accounts (account_id) NOT NULL
 );
 
 CREATE INDEX ON "ix_authentication" ("account_id");
