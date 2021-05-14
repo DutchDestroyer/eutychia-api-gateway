@@ -8,6 +8,7 @@ CREATE TABLE IF NOT EXISTS submitted_answers (
     account_id uuid REFERENCES accounts NOT NULL
 );
 
+CREATE INDEX ON "submitted_answers" ("submitted_answers_id");
 CREATE INDEX ON "submitted_answers" ("project_id");
 CREATE INDEX ON "submitted_answers" ("generic_questionnaire_id");
 CREATE INDEX ON "submitted_answers" ("account_id");

@@ -11,5 +11,6 @@ CREATE TABLE IF NOT EXISTS ix_authentication (
 );
 
 CREATE INDEX ON "ix_authentication" ("account_id");
+CREATE INDEX ON "ix_authentication" ("ix_session_id");
 
 COMMIT;

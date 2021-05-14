@@ -16,5 +16,6 @@ CREATE TABLE IF NOT EXISTS accounts (
 );
 
 CREATE INDEX ON "accounts" ("email");
+CREATE INDEX ON "accounts" ("account_id");
 
 COMMIT;

@@ -8,5 +8,6 @@ CREATE TABLE IF NOT EXISTS answers (
 );
 
 CREATE INDEX ON "answers" ("generic_question_id");
+CREATE INDEX ON "answers" ("answer_id");
 
 COMMIT;

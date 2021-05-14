@@ -15,5 +15,6 @@ CREATE TABLE IF NOT EXISTS generic_question (
 );
 
 CREATE INDEX ON "generic_question" ("generic_questionnaire_id");
+CREATE INDEX ON "generic_question" ("generic_question_id");
 
 COMMIT;

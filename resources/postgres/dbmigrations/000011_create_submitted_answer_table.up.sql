@@ -9,6 +9,7 @@ CREATE TABLE IF NOT EXISTS submitted_answer (
     submitted_answers_id uuid REFERENCES submitted_answers NOT NULL
 );
 
+CREATE INDEX ON "submitted_answer" ("submitted_answer_id");
 CREATE INDEX ON "submitted_answer" ("submitted_answers_id");
 
 COMMIT;
